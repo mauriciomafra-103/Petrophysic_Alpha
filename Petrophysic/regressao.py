@@ -338,26 +338,25 @@ def RegressaoFZI(dados, modelos):
 
     for i in np.arange(len(lito)):
         for j in np.arange(len(modelos)):
+            df_dados = dados.loc[dados['Litofacies'] == dados['Litofacies'].unique()[i]].reset_index().drop('index', axis = 1)
+            rqi = df_dados['RQI_' + modelos[j]]
 
-        df_dados = dados.loc[dados['Litofacies'] == dados['Litofacies'].unique()[i]].reset_index().drop('index', axis = 1)
-        rqi = df_dados['RQI_' + modelos[j]]
-
-        if modelos[j] == "Gas":
-            phi = df_dados['Phi_z_Gas']
-
-        else:
-            phi = df_dados['Phi_z_RMN']
-
-        dados_calculo = pd.DataFrame({'Phi': phi,
-                                    'RQI': rqi})
-
-        dados_calculo['const'] = 1
-
-        dados_calculo = sm.add_constant(dados_calculo)
-        atributos = dados_calculo[['const', 'Phi']]
-        rotulos = dados_calculo[['RQI']]
-        reg_ols_log = sm.OLS(rotulos, atributos, hasconst=True).fit()
-        coef.append([dados['Litofacies'].unique()[i] + '_' + modelos[j], reg_ols_log.params[0], reg_ols_log.params[1], reg_ols_log.params[0]+reg_ols_log.params[1]])
+            if modelos[j] == "Gas":
+                phi = df_dados['Phi_z_Gas']
+    
+            else:
+                phi = df_dados['Phi_z_RMN']
+    
+            dados_calculo = pd.DataFrame({'Phi': phi,
+                                        'RQI': rqi})
+    
+            dados_calculo['const'] = 1
+    
+            dados_calculo = sm.add_constant(dados_calculo)
+            atributos = dados_calculo[['const', 'Phi']]
+            rotulos = dados_calculo[['RQI']]
+            reg_ols_log = sm.OLS(rotulos, atributos, hasconst=True).fit()
+            coef.append([dados['Litofacies'].unique()[i] + '_' + modelos[j], reg_ols_log.params[0], reg_ols_log.params[1], reg_ols_log.params[0]+reg_ols_log.params[1]])
 
     c = pd.DataFrame(coef).rename(columns={0: 'Litofacies', 1:'b', 2:'a', 3:'FZI'})
     return c
