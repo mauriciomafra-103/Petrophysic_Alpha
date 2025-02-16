@@ -421,6 +421,7 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag,
 
 
 def ProcessamentoDadosSDR (Dados):
+  
 
   """
     Seleciona do DataFrame informado apenas os parâmetros necessário para realizar a regressção proposta por Kenyon et al (1988).
@@ -431,8 +432,8 @@ def ProcessamentoDadosSDR (Dados):
     Returns:
         pandas.DataFrame: Retorna um Dataframe menor com as informações essenciais para a regressão dos dados de permeabilidade proposta por Kenyon et al (1988).
 
-    """
-    dados = pd.DataFrame({
+  """
+  dados = pd.DataFrame({
         'Amostra': Dados['Amostra'],
         'Litofacies': Dados['Litofacies'],
         'T2': Dados['T2 Ponderado Log'],
@@ -441,7 +442,7 @@ def ProcessamentoDadosSDR (Dados):
         'Permeabilidade Gas': Dados['Permeabilidade Gas']
         })
 
-    return dados
+  return dados
 
 def ProcessamentoDadosCoates (Dados):
 
@@ -454,8 +455,8 @@ def ProcessamentoDadosCoates (Dados):
     Returns:
         pandas.DataFrame: Retorna um Dataframe menor com as informações essenciais para a regressão dos dados de permeabilidade proposta por Coates et al (1999).
 
-    """
-    dados = pd.DataFrame({
+  """
+  dados = pd.DataFrame({
         'Amostra': Dados['Amostra'],
         'Litofacies': Dados['Litofacies'],
         'BVI': Dados['BVI'],
@@ -464,7 +465,7 @@ def ProcessamentoDadosCoates (Dados):
         'Porosidade Gas': Dados['Porosidade Gas'],
         'Permeabilidade Gas': Dados['Permeabilidade Gas']
         })
-    return dados
+  return dados
 
 def ProcessamentoDadosHan (Dados):
 
@@ -477,8 +478,8 @@ def ProcessamentoDadosHan (Dados):
     Returns:
         pandas.DataFrame: Retorna um Dataframe menor com as informações essenciais para a regressão dos dados de permeabilidade proposta por Han et al (2018).
 
-    """
-    dados = pd.DataFrame({'Amostra': Dados['Amostra'],
+  """
+  dados = pd.DataFrame({'Amostra': Dados['Amostra'],
                           'Litofacies': Dados['Litofacies'],
                           'Permeabilidade Gas': Dados['Permeabilidade Gas'],
                           'Porosidade Gas': Dados['Porosidade Gas'],
@@ -489,7 +490,7 @@ def ProcessamentoDadosHan (Dados):
                           'S4Han': Dados['S4Han']
                           }).replace(0, np.nan).dropna().reset_index().drop('index', axis = 1)
 
-    return dados
+  return dados
 
 def ProcessamentoDadosGe (Dados):
 
@@ -502,8 +503,8 @@ def ProcessamentoDadosGe (Dados):
     Returns:
         pandas.DataFrame: Retorna um Dataframe menor com as informações essenciais para a regressão dos dados de permeabilidade proposta por Ge et al (2017).
 
-    """
-    dados = pd.DataFrame({'Amostra': Dados['Amostra'],
+  """
+  dados = pd.DataFrame({'Amostra': Dados['Amostra'],
                           'Litofacies': Dados['Litofacies'],
                           'Permeabilidade Gas': Dados['Permeabilidade Gas'],
                           'Porosidade Gas': Dados['Porosidade Gas'],
@@ -513,7 +514,7 @@ def ProcessamentoDadosGe (Dados):
                           'S4Ge': Dados['S4Ge']
                           }).replace(0, np.nan).dropna().reset_index().drop('index', axis = 1)
 
-    return dados
+  return dados
 
 
 def ProcessamentoDistribuicaoTreinoTeste (Dados_Treino, Dados_Teste,
