@@ -432,7 +432,7 @@ def ProcessamentoDadosSDR (Dataframe):
         pandas.DataFrame: Retorna um Dataframe menor com as informações essenciais para a regressão dos dados de permeabilidade proposta por Kenyon et al (1988).
 
   """
-  dados = pd.DataFrame({
+  df = pd.DataFrame({
         'Amostra': Dataframe['Amostra'],
         'Litofacies': Dataframe['Litofacies'],
         'T2': Dataframe['T2 Ponderado Log'],
@@ -441,7 +441,7 @@ def ProcessamentoDadosSDR (Dataframe):
         'Permeabilidade Gas': Dataframe['Permeabilidade Gas']
         })
 
-  return dados
+  return df
 
 def ProcessamentoDadosCoates (Dados):
 
