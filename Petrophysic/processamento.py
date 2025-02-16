@@ -420,26 +420,25 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag,
     return df
 
 
-def ProcessamentoDadosSDR (Dados):
+def ProcessamentoDadosSDR (Dataframe):
   
-
   """
     Seleciona do DataFrame informado apenas os parâmetros necessário para realizar a regressção proposta por Kenyon et al (1988).
 
     Args:
-        Dados (pandas.DataFrame): DataFrame com os dados da amostra, litofácies, o valor de T2_lm, porosidade RMN e Gás, e permeabilidade Gas.
+        Dataframe (pandas.DataFrame): DataFrame com os dados da amostra, litofácies, o valor de T2_lm, porosidade RMN e Gás, e permeabilidade Gas.
 
     Returns:
         pandas.DataFrame: Retorna um Dataframe menor com as informações essenciais para a regressão dos dados de permeabilidade proposta por Kenyon et al (1988).
 
   """
   dados = pd.DataFrame({
-        'Amostra': Dados['Amostra'],
-        'Litofacies': Dados['Litofacies'],
-        'T2': Dados['T2 Ponderado Log'],
-        'Porosidade RMN': Dados['Porosidade RMN'],
-        'Porosidade Gas': Dados['Porosidade Gas'],
-        'Permeabilidade Gas': Dados['Permeabilidade Gas']
+        'Amostra': Dataframe['Amostra'],
+        'Litofacies': Dataframe['Litofacies'],
+        'T2': Dataframe['T2 Ponderado Log'],
+        'Porosidade RMN': Dataframe['Porosidade RMN'],
+        'Porosidade Gas': Dataframe['Porosidade Gas'],
+        'Permeabilidade Gas': Dataframe['Permeabilidade Gas']
         })
 
   return dados
