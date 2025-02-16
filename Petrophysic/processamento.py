@@ -11,7 +11,7 @@ from sklearn.preprocessing import MaxAbsScaler, OneHotEncoder
 from sklearn.metrics import mean_squared_error
 
 
-def ObtencaoDadosNiumagTeste(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Pontos_inversao,
+def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Pontos_inversao,
                         Relaxacao = False, Distribuicao = False, T2_niumag = False, Erro = False,
                         Amplitudes = False, Poco = False, N_poco_i = 4, N_poco_f = 0, N_amp = 3):
 
