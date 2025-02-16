@@ -11,7 +11,7 @@ from sklearn.preprocessing import MaxAbsScaler, OneHotEncoder
 from sklearn.metrics import mean_squared_error
 
 
-def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Pontos_inversao,
+def ObtencaoDadosNiumagTeste(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Pontos_inversao,
                         Relaxacao = False, Distribuicao = False, T2_niumag = False, Erro = False,
                         Amplitudes = False, Poco = False, N_poco_i = 4, N_poco_f = 0, N_amp = 3):
 
@@ -72,16 +72,16 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
         poc.append(p)
 
       if Relaxacao == True:
-        time = df[i*7][13:]
-        sinal_niumag = df[i*7+1][13:]
-        sinal_fiting = df[i*7+2][13:]
+        time = np.array(df[i*7][inicio:].reset_index(drop = True)).astype(float)
+        sinal_niumag = np.array(df[i*7+1][inicio:].reset_index(drop = True)).astype(float)
+        sinal_fiting = np.array(df[i*7+2][inicio:].reset_index(drop = True)).astype(float)
         tempo_relaxacao.append(time)
         amplitude_sinal_niumag.append(sinal_niumag)
         amplitude_sinal_fitting.append(sinal_fiting)
 
       if Distribuicao == True:
-        tempo = df[i*7+3][inicio:final]
-        dist = df[i*7+4][inicio:final]
+        tempo = np.array(df[i*7+3][inicio:final].reset_index(drop = True)).astype(float)
+        dist = np.array(df[i*7+4][inicio:final].reset_index(drop = True)).astype(float)
         tempo_distribuicao.append(tempo)
         distribuicao_t2.append(dist)
 
@@ -105,13 +105,13 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
       df['Poço'] = poc
 
     if Relaxacao == True:
-      df['Tempo Relaxacao'] = pd.Series(tempo_relaxacao)
-      df['Amplitude Relaxacao'] = pd.Series(amplitude_sinal_niumag)
-      df['Amplitude Relaxacao Fitting'] = pd.Series(amplitude_sinal_fitting)
+      df['Tempo Relaxacao'] = tempo_relaxacao
+      df['Amplitude Relaxacao'] = amplitude_sinal_niumag
+      df['Amplitude Relaxacao Fitting'] = amplitude_sinal_fitting
 
     if Distribuicao == True:
-      df['Tempo Distribuicao'] = pd.Series(tempo_distribuicao)
-      df['Distribuicao T2'] = pd.Series(distribuicao_t2)
+      df['Tempo Distribuicao'] = tempo_distribuicao
+      df['Distribuicao T2'] = distribuicao_t2
 
     if T2_niumag == True:
       df['T2 Geometrico Niumag'] = t2gm_niumag
@@ -127,7 +127,7 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
 
     return df
 
-
+##################################################################################  Próxima Função  ##################################################################################
 
 def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag,
                        Porosidade_i = False, poro_i = 'Porosidade RMN', T2_log = False, Componentes_t2 = False,
