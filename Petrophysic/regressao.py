@@ -425,8 +425,8 @@ def RegressaoComponentesT2 (Dados, n = 0, P0 = (1, 0.1), Params_Init = [0.8, 0.0
     # Número de graus de liberdade
     degrees_of_freedom = len(A_t) - len(params_init)
     
-      # Valor crítico para alpha = 0.05 (95% de confiança) e graus de liberdade
-      critical_value = chi2.ppf(0.95, degrees_of_freedom)
+    # Valor crítico para alpha = 0.05 (95% de confiança) e graus de liberdade
+    critical_value = chi2.ppf(0.95, degrees_of_freedom)
     
     # Comparação com o valor crítico
     if chi_square_statistic <= critical_value:
