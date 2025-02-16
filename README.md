@@ -41,4 +41,3 @@ To install the library in your Colab, I recommend using the following code.
 #### from processamento import *   # Importing the functions from the processamento.py folder.
 #### from regressao import *       # Importing the functions from the regressao.py folder.
 #### from visualizacoes import *   # Importing the functions from the visualizacoes.py folder.
-"""
