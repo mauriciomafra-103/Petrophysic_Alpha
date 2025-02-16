@@ -14,30 +14,31 @@ The objective of this repository is to provide a series of functions to perform 
 Como costumo utilizar o Colaboratory do Google, pela facilidade de acesso nas salas de aula, o teste de instalação está apenas nessa plataforma.
 Para instalar a biblioteca em seu colab recomendo utilizar o seguinte código.
 
-"""
-!rm -rf /content/Petrophysic_Alpha                                       # Remove a pasta antiga, garantindo que você pode estar sempre recebendo as versões mais atualizadas do código.
-!git clone https://github.com/mauriciomafra-103/Petrophysic_Alpha.git    # Cria um clone do repositório no google, realizando a instalação das funções.
 
-import sys
-sys.path.append('/content/Petrophysic_Alpha/Petrophysic')                # Pegando as funções dentro da pasta específica, então pode ficar de olho em outras pastas com outras funcionalidades que serão postas em breve.
+#### !rm -rf /content/Petrophysic_Alpha                                       # Remove a pasta antiga, garantindo que você pode estar sempre recebendo as versões mais atualizadas do código.
+#### !git clone https://github.com/mauriciomafra-103/Petrophysic_Alpha.git    # Cria um clone do repositório no google, realizando a instalação das funções.
 
-from processamento import *   # Importando as funções que estão na pasta de processamento.py
-from regressao import *       # Importando as funções que estão na pasta de regressao.py
-from visualizacoes import *   # Importando as funções que estão na pasta de visualizacoes.py
-"""
+#### import sys
+#### sys.path.append('/content/Petrophysic_Alpha/Petrophysic')                # Pegando as funções dentro da pasta específica, então pode ficar de olho em outras pastas com outras funcionalidades que serão postas em breve.
+
+#### from processamento import *   # Importando as funções que estão na pasta de processamento.py
+#### from regressao import *       # Importando as funções que estão na pasta de regressao.py
+#### from visualizacoes import *   # Importando as funções que estão na pasta de visualizacoes.py
+
+
 
 # Installation and Access to Functions
 Since I usually use Google Colaboratory for its ease of access in classrooms, the installation test is only on this platform.
 To install the library in your Colab, I recommend using the following code.
 
-"""
-!rm -rf /content/Petrophysic_Alpha                                       # Remove the old folder, ensuring that you always receive the most up-to-date versions of the code.
-!git clone https://github.com/mauriciomafra-103/Petrophysic_Alpha.git    # Creates a clone of the repository on Google, installing the functions.
 
-import sys
-sys.path.append('/content/Petrophysic_Alpha/Petrophysic')                # Fetching the functions from the specific folder, so keep an eye on other folders with additional features that will be added soon.
+#### !rm -rf /content/Petrophysic_Alpha                                       # Remove the old folder, ensuring that you always receive the most up-to-date versions of the code.
+#### !git clone https://github.com/mauriciomafra-103/Petrophysic_Alpha.git    # Creates a clone of the repository on Google, installing the functions.
 
-from processamento import *   # Importing the functions from the processamento.py folder.
-from regressao import *       # Importing the functions from the regressao.py folder.
-from visualizacoes import *   # Importing the functions from the visualizacoes.py folder.
+#### import sys
+#### sys.path.append('/content/Petrophysic_Alpha/Petrophysic')                # Fetching the functions from the specific folder, so keep an eye on other folders with additional features that will be added soon.
+
+#### from processamento import *   # Importing the functions from the processamento.py folder.
+#### from regressao import *       # Importing the functions from the regressao.py folder.
+#### from visualizacoes import *   # Importing the functions from the visualizacoes.py folder.
 """
