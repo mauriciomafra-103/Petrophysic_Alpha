@@ -609,7 +609,7 @@ def ProcessamentoReservatorio (Dados_com_Previsao, Modelagens = ['SDR']):
   return pd.concat([Dados_com_Previsao, df], axis = 1)
 
 
-def DadosRidgeLine(Dados, Pasta_salvamento, Nome,
+def DadosRidgeLine(Dados, Salvar = False, Pasta_salvamento = 'content/', Nome = 'Teste',
                    Distribuicao = ['T2 0.01',  'T2 0.011',  'T2 0.012',  'T2 0.014',  'T2 0.015',  'T2 0.017',  'T2 0.019',  'T2 0.021',  'T2 0.024',
                    'T2 0.027',  'T2 0.03',  'T2 0.033',  'T2 0.037',  'T2 0.041',  'T2 0.046',  'T2 0.051',  'T2 0.057',  'T2 0.064', 
                    'T2 0.071',  'T2 0.079',  'T2 0.088',  'T2 0.098',  'T2 0.109',  'T2 0.122',  'T2 0.136',  'T2 0.152',  'T2 0.169',
@@ -640,39 +640,40 @@ def DadosRidgeLine(Dados, Pasta_salvamento, Nome,
 
   """
 
-    porosidade_i = []
-    tempo_distribuicao = []
-    for i in np.arange(len(Dados)):
-        phi_i = []
-        tempo = []
-        for j in np.arange(len(Distribuicao)):
-            phi_i.append(dados[Distribuicao[j]][i])
-            tempo.append(float(Distribuicao[j][3:]))
-        porosidade_i.append(phi_i)
-        tempo_distribuicao.append(tempo)
+  porosidade_i = []
+  tempo_distribuicao = []
+  for i in np.arange(len(Dados)):
+    phi_i = []
+    tempo = []
+    for j in np.arange(len(Distribuicao)):
+      phi_i.append(dados[Distribuicao[j]][i])
+      tempo.append(float(Distribuicao[j][3:]))
+      porosidade_i.append(phi_i)
+      tempo_distribuicao.append(tempo)
     
-    Dados['Porosidade i'] = porosidade_i
-    Dados['Tempo Distribuicao'] = tempo_distribuicao
+  Dados['Porosidade i'] = porosidade_i
+  Dados['Tempo Distribuicao'] = tempo_distribuicao
     
-    lista_tempo = []
-    lista_amostra = []
-    lista_t2 = []
-    lista_litofacie = []
-    lista_poço = []
-    for i in np.arange(len(dados)):
-        for j in np.arange(len(Dados['Tempo Distribuicao'][0])):
-            lista_amostra.append(Dados['Amostra'][i])
-            lista_tempo.append(Dados['Tempo Distribuicao'][i][j])
-            lista_t2.append(Dados['Porosidade i'][i][j])
-            lista_litofacie.append(Dados['Categoria Litofacies'][i])
-            lista_poço.append(Dados['Poço'][i])
+  lista_tempo = []
+  lista_amostra = []
+  lista_t2 = []
+  lista_litofacie = []
+  lista_poço = []
+  for i in np.arange(len(dados)):
+      for j in np.arange(len(Dados['Tempo Distribuicao'][0])):
+          lista_amostra.append(Dados['Amostra'][i])
+          lista_tempo.append(Dados['Tempo Distribuicao'][i][j])
+          lista_t2.append(Dados['Porosidade i'][i][j])
+          lista_litofacie.append(Dados['Categoria Litofacies'][i])
+          lista_poço.append(Dados['Poço'][i])
 
-    df = pd.DataFrame({'Amostra': lista_amostra,
+  df = pd.DataFrame({'Amostra': lista_amostra,
                        'Poço': lista_poço,
                        'Tempo': lista_tempo,
                        'T2': lista_t2,
                        'Litofacie': lista_litofacie})
+  if Salvar == True:
     local_salvamento = Pasta_salvamento + 'Dados_RidgeLine_' + str(Nome) + '.xlsx'
     df.to_excel(local_salvamento, sheet_name='Dados')                          # Salvar dataframe
     
-    return df
+  return df
