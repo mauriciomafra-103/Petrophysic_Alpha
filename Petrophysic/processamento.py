@@ -68,7 +68,7 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
       amostras.append(nome)
 
       if Poco == True:
-        p = nome[N_poco_f:N_poco]
+        p = nome[N_poco_f:N_poco_i]
         poc.append(p)
 
       if Relaxacao == True:
