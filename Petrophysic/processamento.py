@@ -153,7 +153,7 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
 
 ##################################################################################  Próxima Função  ##################################################################################
 
-def TratamentoDadosRMNTeste(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_pagina = "Dados",
+def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_pagina = "Dados",
                             Porosidade_i = False, poro_i = 'Porosidade RMN', T2_log = False, Componentes_t2 = False,
                             Fator_Cimentacao = False, V_artifical = 1.3, V_geral = 2.0,
                             Fracoes_T2Han = False, Fracoes_T2Ge = False, Localizacao = False,
