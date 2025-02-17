@@ -12,8 +12,9 @@ from sklearn.metrics import mean_squared_error
 
 
 def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Pontos_inversao,
-                        Relaxacao = False, Distribuicao = False, T2_niumag = False, Erro = False,
-                        Amplitudes = False, Poco = False, N_poco_i = 4, N_poco_f = 0, N_amp = 3):
+                        Relaxacao = False, Distribuicao = False, T2_niumag = False, Erro = False, Ruido = False,
+                        T2_Amplitudes = False, Poco = False, 
+                        N_amostra = 9, N_poco_i = 4, N_poco_f = 0, N_amp = 3):
 
 
     """
@@ -29,8 +30,9 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
           Distribuicao (bool): Caso o usuário queira retornar os valores do Sinal, Fiiting e Tempo de Relaxação.
           T2_niumag (bool): Caso o usuário queira retornar o processamento da média geométrica T2.
           Erro (bool): Caso o usuário deseje o Erro Fiiting.
-          Amplitudes (bool): Caso o usuário deseje os picos das amplitudes.
+          T2_Amplitudes (bool): Caso o usuário deseje os picos das amplitudes da distribuição T2.
           Poco (bool): Caso o usuário tenha as informações dos poços contidas no nome das amostras.
+          N_amostra (int): Quantidade de caracteres que o nome da amostra tem.
           N_poco_i (int): Identificação do começo do nome do poço.
           N_poco_f (int): Identificação do final do nome do poço.
           N_amp (int): Identificação da quantidade de amplitudes desejadas.
@@ -52,8 +54,10 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
     amostras = []
     poc = []
     tempo_relaxacao = []
+    amplitude_pico_niumag = []
+    amplitude_pico_fitting = []
     amplitude_sinal_niumag = []
-    amplitude_sinal_fitting = []
+    ruido_niumag = []
     tempo_distribuicao = []
     distribuicao_t2 = []
     t2gm_niumag = []
@@ -64,7 +68,7 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
     for i in np.arange(int(len(dados_niumag.columns)/7)):
       df = dados_niumag.T.reset_index().drop('index', axis = 1).T
 
-      nome = dados_niumag.columns[i*7][:9]
+      nome = dados_niumag.columns[i*7][:N_amostra]
       amostras.append(nome)
 
       if Poco == True:
@@ -73,11 +77,11 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
 
       if Relaxacao == True:
         time = np.array(df[i*7][inicio:].reset_index(drop = True)).astype(float)
-        sinal_niumag = np.array(df[i*7+1][inicio:].reset_index(drop = True)).astype(float)
-        sinal_fiting = np.array(df[i*7+2][inicio:].reset_index(drop = True)).astype(float)
+        pico_niumag = np.array(df[i*7+1][inicio:].reset_index(drop = True)).astype(float)
+        pico_fiting = np.array(df[i*7+2][inicio:].reset_index(drop = True)).astype(float)
         tempo_relaxacao.append(time)
-        amplitude_sinal_niumag.append(sinal_niumag)
-        amplitude_sinal_fitting.append(sinal_fiting)
+        amplitude_pico_niumag.append(pico_niumag)
+        amplitude_pico_fitting.append(pico_fiting)
 
       if Distribuicao == True:
         tempo = np.array(df[i*7+3][inicio:final].reset_index(drop = True)).astype(float)
@@ -91,12 +95,18 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
         t2gm_niumag.append(gm)
         t2av_niumag.append(av)
 
+      if Ruido == True:
+        sinal = np.array(df[i*7+5][inicio:].reset_index(drop = True)).astype(float)
+        ruido = np.array(df[i*7+6][inicio:].reset_index(drop = True)).astype(float)
+        amplitude_sinal_niumag.append(sinal)
+        ruido_niumag.append(ruido)
+
       if Erro == True:
         fit_erro = float(df[i*7][0][-5:])
         fitting_erro.append(fit_erro)
 
-      if Amplitudes == True:
-        amp = df[i*7+2][5:10].fillna(0).nlargest(N_amp)
+      if T2_Amplitudes == True:
+        amp = pd.Series(np.array(df[i*7+2][5:inicio-2]).astype(float)).fillna(0).nlargest(N_amp)
         amplitudes.append(amp)
 
     df = pd.DataFrame({'Amostra': amostras})
@@ -106,8 +116,12 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
 
     if Relaxacao == True:
       df['Tempo Relaxacao'] = tempo_relaxacao
-      df['Amplitude Relaxacao'] = amplitude_sinal_niumag
-      df['Amplitude Relaxacao Fitting'] = amplitude_sinal_fitting
+      df['Picos Relaxacao'] = amplitude_pico_niumag
+      df['Picos Relaxacao Fitting'] = amplitude_pico_fitting
+    
+    if Ruido == True:
+      df['Sinal'] = amplitude_sinal_niumag
+      df['Ruido'] = ruido_niumag
 
     if Distribuicao == True:
       df['Tempo Distribuicao'] = tempo_distribuicao
@@ -120,8 +134,18 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
     if Erro == True:
       df['Fitting Error'] = fitting_erro
 
-    if Amplitudes == True:
-      df['Amplitudes'] = amplitudes
+    if T2_Amplitudes == True:
+      dados_A = pd.DataFrame([[0 for col in range(N_amp)] for row in range(len(df['Amostra']))])
+      colunas = []
+      for i in np.arange( len(df['Amostra'])):
+        for j in np.arange(N_amp):
+          amp = amplitudes[i].reset_index(drop = True)[j]
+          df['Amplitudes'] = amplitudes
+          N_colunas = 'Amplitude ' + str(j)
+          colunas.append(N_colunas)
+          dados_A[j][i] = amp
+      dados_A.columns = colunas[0:N_amp]
+      df = pd.concat([df, dados_A], axis = 1)
 
     df = df.sort_values(by = 'Amostra')
 
@@ -129,7 +153,7 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
 
 ##################################################################################  Próxima Função  ##################################################################################
 
-def TratamentoDadosRMNTeste(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_pagina = "Dados",
+def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_pagina = "Dados",
                        Porosidade_i = False, poro_i = 'Porosidade RMN', T2_log = False, Componentes_t2 = False,
                        Fator_Cimentacao = False, V_artifical = 1.3, V_geral = 2.0,
                        Fracoes_T2Han = False, Fracoes_T2Ge = False, Localizacao = False,
