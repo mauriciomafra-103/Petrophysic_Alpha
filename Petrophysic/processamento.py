@@ -10,6 +10,10 @@ from sklearn import preprocessing
 from sklearn.preprocessing import MaxAbsScaler, OneHotEncoder
 from sklearn.metrics import mean_squared_error
 
+# Bibliotecas para georeferenciamento
+import geopandas as gpd
+from shapely.geometry import Point  # Exemplo de geometria
+
 
 def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Pontos_inversao,
                         Relaxacao = False, Distribuicao = False, T2_niumag = False, Erro = False, Ruido = False,
