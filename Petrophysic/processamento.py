@@ -153,14 +153,15 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
 
 ##################################################################################  Próxima Função  ##################################################################################
 
-def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_pagina = "Dados",
-                       Porosidade_i = False, poro_i = 'Porosidade RMN', T2_log = False, Componentes_t2 = False,
-                       Fator_Cimentacao = False, V_artifical = 1.3, V_geral = 2.0,
-                       Fracoes_T2Han = False, Fracoes_T2Ge = False, Localizacao = False,
-                       Parametros_lab = ['Amostra', 'Permeabilidade Gas', 'Porosidade Gas', 'Porosidade RMN'],
-                       Geometria = False, EPSG = 4326, Conversao = False, N_Conversao = 32724,
-                       BVIFFI = False, tempo = 'Arenito', Fator_Formacao = False, Litofacie = False,
-                       Amplitude = False, Dados_porosidade_Transverso = False, N_transverso = 128):
+def TratamentoDadosRMNTeste(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_pagina = "Dados",
+                            Porosidade_i = False, poro_i = 'Porosidade RMN', T2_log = False, Componentes_t2 = False,
+                            Fator_Cimentacao = False, V_artifical = 1.3, V_geral = 2.0,
+                            Fracoes_T2Han = False, Fracoes_T2Ge = False, Localizacao = False,
+                            Parametros_lab = ['Amostra', 'Permeabilidade Gas', 'Porosidade Gas', 'Porosidade RMN'],
+                            Geometria = False, EPSG = 4326, Conversao = False, N_Conversao = 32724,
+                            BVIFFI = False, T_BVIFFI = 32.0, Fator_Formacao = False, Litofacie = False, 
+                            Fracoes_arg_cap_ffi = False, T_arg = 3.0, T_cap = 92.0,
+                            Dados_porosidade_Transverso = False, N_transverso = 128):
     """
     Esta função trata mesclar os dados já processados de RMN (como processado pela função anterior e que tenha informações da distribuição de tamanho de poros)
     com os dados laboratoriais, que contenham dados de porosidade a gás e de RMN, permeabilidade a gas, litofácies das amostras.
@@ -185,10 +186,12 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
         Conversao (bool): Caso o usuário queira converter os o sistema de coordenadas dos dados lab em outro.
         N_Conversao (int): Sistema de coordenadas da European Petroleum Survey Group que o usuário deseja converter a geometrias das amostras. Obs: O formato de conversão padrão é o WTF24M.
         BVIFFI (bool): Caso o usuário queira retornar as frações da modelagem proposta por Coates et al (1999).
-        tempo (str): Informações do modelo de tempo que o usuário deseja retornar.
+        T_BVIFFI (float): Informações do modelo de tempo que o usuário deseja retornar.
         Fator_Formacao (bool): Caso o usuário queira obter o fator de formação.
         Litofacie (bool): Caso o usuário tenha nos dados do laboratório informações sobre as litofácies.
-        Amplitude (bool): Caso o usuário queira transformar a lista com os valores da Amplitude do sinal de Relaxação em colunas
+        Fracoes_arg_cap_ffi (bool): Caso o usuário queira retornar as frações referente a porção argila, capilar e livre proposta por Coates et al (1999).
+        T_arg (float): Tempo de Argila.
+        T_cap (float): Tempo de Capilar.
         Dados_porosidade_Transverso (bool): Caso o usuário queira transformar a lista com os valores da Distribuição de Tamanho de poros em colunas.
         N_transverso (int): Quantidade de pontos da inversão da curva de relaxação T2.
 
@@ -222,6 +225,9 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
     A1 = []
     A2 = []
     A3 = []
+    argila = []
+    capilar = []
+    ffi_cap = []
 
     df_niumag_sa = dados_niumag.drop('Amostra', axis = 1)
     df = pd.concat([dados_lab[Parametros_lab], df_niumag_sa, ], axis = 1)
@@ -303,12 +309,20 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
 
     if Fracoes_T2Han == True:
       for i in np.arange(len(porosi_i)):
+        indices_micro = np.where(tempo_distribuicao[i] <= 30)[0]
+        indices_meso = np.where(tempo_distribuicao[i] <= 90)[0]
+        indices_macro = np.where(tempo_distribuicao[i] <= 200)[0]
+
+        f_micro = indices_micro[-1]
+        f_meso = indices_meso[-1]
+        f_macro = indices_macro[-1]
+
         phi_i = pd.Series(porosi_i[i])
         porosidade = np.sum(porosi_i[i])
-        a1h = phi_i[:74].sum()
-        a2h = phi_i[74:84].sum()
-        a3h = phi_i[84:92].sum()
-        a4h = phi_i[92:].sum()
+        a1h = phi_i[:f_micro].sum()
+        a2h = phi_i[f_micro:f_meso].sum()
+        a3h = phi_i[f_meso:f_macro].sum()
+        a4h = phi_i[f_macro:].sum()
         phimicroh = a1h/porosidade
         phimesoh  = a2h/porosidade
         phimacroh = a3h/porosidade
@@ -336,11 +350,21 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
 
     if Fracoes_T2Ge == True:
       for i in np.arange(len(porosi_i)):
+        indices_micro = np.where(tempo_distribuicao[i] <= 32)[0]
+        indices_meso = np.where(tempo_distribuicao[i] <= 90)[0]
+        indices_macro = np.where(tempo_distribuicao[i] <= 180)[0]
+
+        f_micro = indices_micro[-1]
+        f_meso = indices_meso[-1]
+        f_macro = indices_macro[-1]
+
         phi_i = pd.Series(porosi_i[i])
-        phimicrog = phi_i[:75].sum()
-        phimesog = phi_i[75:84].sum()
-        phimacrog = phi_i[84:91].sum()
-        phisuperg = phi_i[91:].sum()
+        porosidade = np.sum(porosi_i[i])
+
+        phimicrog = (phi_i[:f_micro].sum())/porosidade
+        phimesog = (phi_i[f_micro:f_meso].sum())/porosidade
+        phimacrog = (phi_i[f_meso:f_macro].sum())/porosidade
+        phisuperg = (phi_i[f_macro:].sum())/porosidade
 
 
         if phimicrog <= 0.0001:
@@ -357,42 +381,61 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
       df['S1Ge'] = s1g
       df['S3Ge'] = s3g
       df['S4Ge'] = s4g
-      # Cálculo das frações da modelagen Ge et al (2016)
+      # Cálculo das frações da modelagen Ge et al (2017)
 
     if BVIFFI == True:
       for i in np.arange(len(porosi_i)):
+        indices_bviffi = np.where(tempo_distribuicao[i] <= T_BVIFFI)[0]
+        f_bviffi = indices_bviffi[-1]
 
-        if tempo == 'Arenito':
-          phi_i = pd.Series(porosi_i[i])
-          b = phi_i[:76].sum()
-          f = phi_i[76:].sum()
+        phi_i = pd.Series(porosi_i[i])
+        porosidade = np.sum(porosi_i[i])
+
+        b = (phi_i[:f_bviffi].sum())/porosidade
+        f = phi_i[f_bviffi:].sum()/porosidade
 
 
-          if b <= 0.0001:
+        if b <= 0.0001:
                 b = 0.0001
-          if f <= 0.0001:
+        if f <= 0.0001:
                 f = 0.0001
 
-          BVI.append(b)
-          FFI.append(f)
-
-        if tempo == 'Carbonato':
-          phi_i = pd.Series(porosi_i[i])
-          b = phi_i[:86].sum()
-          f = phi_i[86:].sum()
-
-
-          if b <= 0.0001:
-                b = 0.0001
-          if f <= 0.0001:
-                f = 0.0001
-
-          BVI.append(b)
-          FFI.append(f)
+        BVI.append(b)
+        FFI.append(f)
 
       df['BVI'] = BVI
       df['FFI'] = FFI
       # Cálculo do BVI e FFI para modelagem Coates et al (1999)
+    
+    if Fracoes_arg_cap_ffi == True:
+      for i in np.arange(len(porosi_i)):
+        indices_arg = np.where(tempo_distribuicao[i] <= T_arg)[0]
+        indices_cap = np.where(tempo_distribuicao[i] <= T_cap)[0]
+        f_arg = indices_arg[-1]
+        f_cap = indices_cap[-1]
+
+        phi_i = pd.Series(porosi_i[i])
+        porosidade = np.sum(porosi_i[i])
+
+        S_arg = (phi_i[:f_arg].sum())/porosidade
+        S_cap = (phi_i[f_arg:f_cap].sum())/porosidade
+        S_ffi = (phi_i[f_cap:].sum())/porosidade
+
+
+        if S_arg <= 0.0001:
+                  S_arg = 0.0001
+        if S_cap <= 0.0001:
+                  S_cap = 0.0001
+        if S_ffi <= 0.0001:
+                  S_ffi = 0.0001
+
+        argila.append(S_arg)
+        capilar.append(S_cap)
+        ffi_cap.append(S_ffi)
+
+      df['Fracao Argila'] = argila
+      df['Fracao Capilar'] = capilar
+      df['FFI Capilar'] = ffi_cap
 
     if Dados_porosidade_Transverso == True:
       dataframe_porosidade = df['Porosidade_i']
@@ -409,35 +452,9 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
       dados_T.columns = colunas[0:N_transverso]
       df = pd.concat([df, dados_T], axis = 1)
       # Transformação da lista em colunas
+    
+    
 
-    if Amplitude == True:
-      for i in np.arange(len(dados_niumag['Amplitudes'])):
-        lista = []
-        for j in np.arange(len(dados_niumag['Amplitudes'][i])):
-          a = str(list(dados_niumag['Amplitudes'][i]))[1:-1]
-          nome = "T2 " + a
-
-          if nome == 'T2 0.0':
-              lista.append(0)
-          elif nome == 'T2 10000.0':
-              lista.append(df['T2 10000'][0])
-          else:
-              lista.append(df[nome][0])
-
-        if lista[0] == 0:
-            lista[0] = 0.000001
-        if lista[1] == 0:
-            lista[1] = 0.000001
-        if lista[2] == 0:
-            lista[2] = 0.000001
-
-        A1.append(lista[0])
-        A2.append(lista[1])
-        A3.append(lista[2])
-
-      df["Amp1"] = A1
-      df['Amp2'] = A2
-      df['Amp3'] = A3
 
     df = df.sort_values(by = 'Amostra')
 
