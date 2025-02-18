@@ -584,7 +584,7 @@ def ProcessamentoDadosGe (Dataframe,
                         'Porosidade Gas': Dataframe[Porosidade_Gas],
                         'Porosidade RMN': Dataframe[Porosidade_RMN],
                         'S1Ge': Dataframe[S1],
-                        'S3Ge': Dataframe[S2],
+                        'S3Ge': Dataframe[S3],
                         'S4Ge': Dataframe[S4]
                        }).replace(0, np.nan).dropna().reset_index().drop('index', axis = 1)
   if Cluster == True:
