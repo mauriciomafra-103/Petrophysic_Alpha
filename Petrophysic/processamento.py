@@ -290,7 +290,7 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
         razao_t2 = float(np.exp(sum_num/sum_den))
         media_ponderada_log.append((razao_t2))
     # Calculando o T2_log usado na função do Kenyon et al (1988)
-    df['T2 Ponderado Log"] = media_ponderada_log
+    df["T2 Ponderado Log"] = media_ponderada_log
                               
     if Componentes_t2 == True:
       df = pd.concat([df, dados_lab[['A_NMR', 'T2_NMR',
