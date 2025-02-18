@@ -697,7 +697,7 @@ def ProcessamentoReservatorio (Dados_com_Previsao, Modelagens = ['SDR']):
 
 ##################################################################################  Próxima Função  ##################################################################################
 
-def DadosRidgeLineTeste(Dataframe, N_t2 = 3, Cluster = False, Poco = False, N_poco = 'Poço', N_cluster = 'Litofacies',
+def DadosRidgeLine(Dataframe, N_t2 = 3, Cluster = False, Poco = False, N_poco = 'Poço', N_cluster = 'Litofacies',
                    Distribuicao = ['T2 0.01',  'T2 0.011',  'T2 0.012',  'T2 0.014',  'T2 0.015',  'T2 0.017',  'T2 0.019',  'T2 0.021',  'T2 0.024',
                                    'T2 0.027',  'T2 0.03',  'T2 0.033',  'T2 0.037',  'T2 0.041',  'T2 0.046',  'T2 0.051',  'T2 0.057',  'T2 0.064',
                                    'T2 0.071',  'T2 0.079',  'T2 0.088',  'T2 0.098',  'T2 0.109',  'T2 0.122',  'T2 0.136',  'T2 0.152',  'T2 0.169',
