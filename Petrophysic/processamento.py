@@ -579,7 +579,7 @@ def ProcessamentoDadosGe (Dataframe,
         pandas.DataFrame: Retorna um Dataframe menor com as informações essenciais para a regressão dos dados de permeabilidade proposta por Ge et al (2017).
 
   """
-  dados = pd.DataFrame({'Amostra': Dataframe[Amostra],
+  df = pd.DataFrame({'Amostra': Dataframe[Amostra],
                         'Permeabilidade Gas': Dataframe[Permeabilidade_Gas],
                         'Porosidade Gas': Dataframe[Porosidade_Gas],
                         'Porosidade RMN': Dataframe[Porosidade_RMN],
@@ -590,7 +590,7 @@ def ProcessamentoDadosGe (Dataframe,
   if Cluster == True:
     df[N_Cluster] = Dataframe[N_Cluster]
 
-  return dados
+  return df
 
 ##################################################################################  Próxima Função  ##################################################################################
 
