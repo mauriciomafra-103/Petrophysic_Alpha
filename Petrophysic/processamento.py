@@ -519,7 +519,7 @@ def ProcessamentoDadosCoates (Dataframe,
         'BVI': Dataframe[BVI],
         'FFI': Dataframe[FFI],
         'Porosidade RMN': Dataframe[Porosidade_RMN],
-        'Porosidade Gas': Dataframe[Porosidade _Gas],
+        'Porosidade Gas': Dataframe[Porosidade_Gas],
         'Permeabilidade Gas': Dataframe[Permeabilidade_Gas]
         })
                                 
