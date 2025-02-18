@@ -10,7 +10,9 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.metrics import r2_score
 
 
-def RegressaoSDR (Dataframe_SDR):
+def RegressaoSDR (Dataframe_SDR,
+                  N_t2 = 'T2 Ponderado Log', N_porosidade = 'Porosidade RMN',
+                  N_permeabilidade = 'Permeabilidade Gas'):
 
     """
     A regressão dos coeficientes da modelagem SDR proposta por Kenyon et al (1988).
@@ -23,9 +25,9 @@ def RegressaoSDR (Dataframe_SDR):
         com o DataFrame informado, e o erro sigma.
     """
     # Regressão via OLS
-    t2 = Dataframe_SDR['T2 Ponderado Log']
-    phi = Dataframe_SDR['Porosidade RMN']
-    permeabilidade = Dataframe_SDR['Permeabilidade Gas']
+    t2 = Dataframe_SDR[N_t2]
+    phi = Dataframe_SDR[N_porosidade]
+    permeabilidade = Dataframe_SDR[N_permeabilidade]
     dados_calculo = pd.DataFrame({'Log k': np.log(permeabilidade),
                                 'Log φ': np.log(phi),
                                 'Log T2': np.log(t2)})
@@ -47,10 +49,10 @@ def RegressaoSDR (Dataframe_SDR):
     b = coeficientes['Valor']['b']
     c = coeficientes['Valor']['c']
     k = (a*(phi**b)*(t2**c))
-    dados = pd.DataFrame({'Permeabilidade Prevista': k})
+    dados = pd.DataFrame({'Permeabilidade Prevista SDR': k})
 
     #Erro Sigma
-    k_p = np.log10(dados['Permeabilidade Prevista'])
+    k_p = np.log10(dados['Permeabilidade Prevista SDR'])
     k_g = np.log10(permeabilidade)
     N = len(k_p)
     soma = np.sum((k_p-k_g)**2)
@@ -59,7 +61,11 @@ def RegressaoSDR (Dataframe_SDR):
 
     return reg_ols_log, coeficientes, pd.concat([Dataframe_SDR, dados], axis = 1), sigma
 
-def RegressaoCoates (Dataframe_Coates):
+
+
+def RegressaoTimurCoates (Dataframe_Coates,
+                     BVI = 'BVI', FFI = 'FFI', N_porosidade = 'Porosidade RMN',
+                     N_Permeabilidade = 'Permeabilidade Gas'):
 
     """
     A regressão dos coeficientes da modelagem Coates proposta por Coates et al (1999).
@@ -72,9 +78,9 @@ def RegressaoCoates (Dataframe_Coates):
         com o DataFrame informado, e o erro sigma.
     """
     # Regressão via OLS
-    FFIBVI = Dataframe_Coates['FFI']/Dataframe_Coates['BVI']
-    phi = Dataframe_Coates['Porosidade RMN']
-    permeabilidade = Dataframe_Coates['Permeabilidade Gas']
+    FFIBVI = Dataframe_Coates[FFI]/Dataframe_Coates[BVI]
+    phi = Dataframe_Coates[N_porosidade]
+    permeabilidade = Dataframe_Coates[N_Permeabilidade]
     dados_calculo = pd.DataFrame({'Log k': np.log(permeabilidade),
                                 'Log φ': np.log(phi),
                                 'Log FFI/BVI': np.log(FFIBVI)})
@@ -97,10 +103,10 @@ def RegressaoCoates (Dataframe_Coates):
     b = coeficientes['Valor']['b']
     c = coeficientes['Valor']['c']
     k = (a*(phi**b)*(FFIBVI**c))
-    dados = pd.DataFrame({'Permeabilidade Prevista': k})
+    dados = pd.DataFrame({'Permeabilidade Prevista Timur-Coates': k})
 
     #Erro Sigma
-    k_p = np.log10(dados['Permeabilidade Prevista'])
+    k_p = np.log10(dados['Permeabilidade Prevista Timur-Coates'])
     k_g = np.log10(permeabilidade)
     N = len(k_p)
     soma = np.sum((k_p-k_g)**2)
@@ -109,7 +115,12 @@ def RegressaoCoates (Dataframe_Coates):
 
     return reg_ols_log, coeficientes, pd.concat([Dataframe_Coates, dados], axis = 1), sigma
 
-def RegressaoHan (Dataframe_Han):
+
+
+def RegressaoHan (Dataframe_Han,
+                           Amostra = 'Amostra', S1 = 'S1Han', S2 = 'S2Han', S3 = 'S3Han', S4 = 'S4Han',
+                           N_porosidade = 'Porosidade RMN',
+                           N_permeabilidade = 'Permeabilidade Gas'):
 
     """
     A regressão dos coeficientes da modelagem Coates proposta por Han et al (2018).
@@ -123,28 +134,28 @@ def RegressaoHan (Dataframe_Han):
     """
     # Regressão via OLS
     dados_calculo_log = pd.DataFrame({
-    'Log k': np.log(Dataframe_Han['Permeabilidade Gas']),
-    'Log φ': np.log(Dataframe_Han['Porosidade RMN']),
-    'S1 log': (-1)*(np.log(Dataframe_Han['S1Han'])),
-    'S2 log': (-1)*(np.log(Dataframe_Han['S2Han'])),
-    'S3 log': np.log(Dataframe_Han['S3Han']),
-    'S4 log': np.log(Dataframe_Han['S4Han'])})
+    'Log k': np.log(Dataframe_Han[N_permeabilidade]),
+    'Log φ': np.log(Dataframe_Han[N_porosidade]),
+    'S1 log': (-1)*(np.log(Dataframe_Han[S1])),
+    'S2 log': (-1)*(np.log(Dataframe_Han[S2])),
+    'S3 log': np.log(Dataframe_Han[S3]),
+    'S4 log': np.log(Dataframe_Han[S4])})
     dados_calculo = sm.add_constant(dados_calculo_log)
 
     atributos = dados_calculo[['const', 'Log φ', 'S3 log', 'S4 log', 'S1 log', 'S2 log']]
     rotulos = dados_calculo['Log k']
-    reg_novo = sm.OLS(rotulos, atributos, hasconst=True, missing = 'drop').fit()
+    reg_ols_log = sm.OLS(rotulos, atributos, hasconst=True, missing = 'drop').fit()
 
     # Obtenção dos coeficientes da Regressão
     coeficientes_novo = pd.DataFrame({
           'Coeficiente': ['a', 'b', 'c', 'd', 'e', 'f', 'R2'],
-          'Valor': [np.exp(reg_novo.params[0]),
-                    reg_novo.params[1],
-                    reg_novo.params[2],
-                    reg_novo.params[3],
-                    reg_novo.params[4],
-                    reg_novo.params[5],
-                    reg_novo.rsquared]
+          'Valor': [np.exp(reg_ols_log.params[0]),
+                    reg_ols_log.params[1],
+                    reg_ols_log.params[2],
+                    reg_ols_log.params[3],
+                    reg_ols_log.params[4],
+                    reg_ols_log.params[5],
+                    reg_ols_log.rsquared]
           }).set_index('Coeficiente')
 
     # Cálculo da Previsão com base nos coeficientes obtidos
@@ -154,17 +165,17 @@ def RegressaoHan (Dataframe_Han):
     d = coeficientes_novo['Valor']['d']
     e = coeficientes_novo['Valor']['e']
     f = coeficientes_novo['Valor']['f']
-    phi = Dataframe_Han['Porosidade RMN']
-    s1 = Dataframe_Han['S1Han']
-    s2 = Dataframe_Han['S2Han']
-    s3 = Dataframe_Han['S3Han']
-    s4 = Dataframe_Han['S4Han']
+    phi = Dataframe_Han[N_porosidade]
+    s1 = Dataframe_Han[S1]
+    s2 = Dataframe_Han[S2]
+    s3 = Dataframe_Han[S3]
+    s4 = Dataframe_Han[S4]
     k = a*(phi**b)*(s3**c)*(s4**d)/((s1**e)*(s2**f))
-    dados = pd.DataFrame({'Permeabilidade Prevista': k})
+    dados = pd.DataFrame({'Permeabilidade Prevista Han': k})
 
     #Erro Sigma
-    k_p = np.log10(dados['Permeabilidade Prevista'])
-    k_g = np.log10(Dataframe_Han['Permeabilidade Gas'])
+    k_p = np.log10(dados['Permeabilidade Prevista Han'])
+    k_g = np.log10(Dataframe_Han[N_permeabilidade])
     N = len(k_p)
     soma = np.sum((k_p-k_g)**2)
     raiz = np.sqrt(soma/N)
@@ -172,10 +183,12 @@ def RegressaoHan (Dataframe_Han):
 
 
 
-    return reg_novo, coeficientes_novo, pd.concat([Dataframe_Han, dados], axis = 1), sigma
+    return reg_ols_log, coeficientes_novo, pd.concat([Dataframe_Han, dados], axis = 1), sigma
 
 
-def RegressaoGe (Dataframe_Ge):
+def RegressaoGe (Dataframe_Ge,
+                 Amostra = 'Amostra', S1 = 'S1Ge', S3 = 'S3Ge', S4 = 'S4Ge',
+                 N_porosidade = 'Porosidade RMN', N_permeabilidade = 'Permeabilidade Gas'):
 
     """
     A regressão dos coeficientes da modelagem Coates proposta por Ge et al (2017).
@@ -189,11 +202,11 @@ def RegressaoGe (Dataframe_Ge):
     """
     # Regressão via OLS
     dados_calculo_log = pd.DataFrame({
-    'Log k': np.log(Dataframe_Ge['Permeabilidade Gas']),
-    'Log φ': np.log(Dataframe_Ge['Porosidade RMN']),
-    'S1 log': (-1)*(np.log(Dataframe_Ge['S1Ge'])),
-    'S3Ge': Dataframe_Ge['S3Ge'],
-    'S4Ge': Dataframe_Ge['S4Ge']})
+    'Log k': np.log(Dataframe_Ge[N_permeabilidade]),
+    'Log φ': np.log(Dataframe_Ge[N_porosidade]),
+    'S1 log': (-1)*(np.log(Dataframe_Ge[S1])),
+    'S3Ge': Dataframe_Ge[S3],
+    'S4Ge': Dataframe_Ge[S4]})
 
     # Função para calcular a soma dos quadrados dos resíduos
     def residuals(params, df):
@@ -222,34 +235,34 @@ def RegressaoGe (Dataframe_Ge):
     rotulos = dados_calculo_log['Log k']
 
     # Ajustando o modelo de regressão
-    reg_novo = sm.OLS(rotulos, atributos, hasconst=True, missing = 'drop').fit()
+    reg_ols_log = sm.OLS(rotulos, atributos, hasconst=True, missing = 'drop').fit()
 
     # Obtenção dos coeficientes da Regressão
     coeficientes_novo = pd.DataFrame({
           'Coeficiente': ['a', 'b', 'c', 'd', 'e', 'R2'],
-          'Valor': [np.exp(reg_novo.params[0]),
-                    reg_novo.params[1],
+          'Valor': [np.exp(reg_ols_log.params[0]),
+                    reg_ols_log.params[1],
                     c,
                     d,
-                    reg_novo.params[2],
-                    reg_novo.rsquared]
+                    reg_ols_log.params[2],
+                    reg_ols_log.rsquared]
           }).set_index('Coeficiente')
 
     # Cálculo da Previsão com base nos coeficientes obtidos
     a = coeficientes_novo['Valor']['a']
     b = coeficientes_novo['Valor']['b']
     e = coeficientes_novo['Valor']['e']
-    phi = Dataframe_Ge['Porosidade RMN']
-    s1Ge = Dataframe_Ge['S1Ge']
-    s3Ge = Dataframe_Ge['S3Ge']
-    s4Ge = Dataframe_Ge['S4Ge']
+    phi = Dataframe_Ge[N_porosidade]
+    s1Ge = Dataframe_Ge[S1]
+    s3Ge = Dataframe_Ge[S3]
+    s4Ge = Dataframe_Ge[S4]
     k = a*(phi**b)*((s3Ge**c)+(s4Ge**d)/(s1Ge**e))
-    dados = pd.DataFrame({'Permeabilidade Prevista': k})
+    dados = pd.DataFrame({'Permeabilidade Prevista Ge': k})
 
 
     #Erro Sigma
-    k_p = np.log10(dados['Permeabilidade Prevista'])
-    k_g = np.log10(Dataframe_Ge['Permeabilidade Gas'])
+    k_p = np.log10(dados['Permeabilidade Prevista Ge'])
+    k_g = np.log10(Dataframe_Ge[N_permeabilidade])
     N = len(k_p)
     soma = np.sum((k_p-k_g)**2)
     raiz = np.sqrt(soma/N)
@@ -257,24 +270,11 @@ def RegressaoGe (Dataframe_Ge):
 
 
 
-    return reg_novo, coeficientes_novo, pd.concat([Dataframe_Ge, dados], axis = 1), sigma
+    return reg_ols_log, coeficientes_novo, pd.concat([Dataframe_Ge, dados], axis = 1), sigma
 
 
-def RegressaoRios(dados_treino, dados_teste):
-    
-
-    """
-    A regressão dos coeficientes da modelagem Coates proposta por Rios et al (2011).
-
-    Args:
-        dados_treino (pandas.DataFrame): Dataframe com os dados necessários para o treinamento do modelo.
-        dados_teste (pandas.DataFrame): Dataframe com os dados necessários avaliação do modelo.
-    Returns:
-        Retorna a regressão realizada (reg_novo), os coeficientes da regressão (coeficientes_novo), um dataframe com os dados previstos concatenado
-        com o DataFrame informado, e o erro sigma.
-    """
-      
-    X_treino = dados_treino[['T2 0.01',  'T2 0.011',  'T2 0.012',  'T2 0.014',  'T2 0.015',  'T2 0.017',  'T2 0.019',  'T2 0.021',  'T2 0.024',
+def RegressaoRios(dados_treino, dados_teste, N_permeabilidade = 'Permeabilidade Gas', Log = True, N_componentes = 6,
+                  C_distribuicao = ['T2 0.01',  'T2 0.011',  'T2 0.012',  'T2 0.014',  'T2 0.015',  'T2 0.017',  'T2 0.019',  'T2 0.021',  'T2 0.024',
            'T2 0.027',  'T2 0.03',  'T2 0.033',  'T2 0.037',  'T2 0.041',  'T2 0.046',  'T2 0.051',  'T2 0.057',  'T2 0.064',
            'T2 0.071',  'T2 0.079',  'T2 0.088',  'T2 0.098',  'T2 0.109',  'T2 0.122',  'T2 0.136',  'T2 0.152',  'T2 0.169',
            'T2 0.189',  'T2 0.21',  'T2 0.234',  'T2 0.261',  'T2 0.291',  'T2 0.325',  'T2 0.362',  'T2 0.404',  'T2 0.45',
@@ -288,38 +288,78 @@ def RegressaoRios(dados_treino, dados_teste):
            'T2 475.516',  'T2 530.163',  'T2 591.09',  'T2 659.019',  'T2 734.754',  'T2 819.192',  'T2 913.335',  'T2 1018.296',  'T2 1135.32',
            'T2 1265.792',  'T2 1411.258',  'T2 1573.441',  'T2 1754.262',  'T2 1955.864',  'T2 2180.633',  'T2 2431.234',  'T2 2710.634',  'T2 3022.143',
            'T2 3369.45',  'T2 3756.671',  'T2 4188.391',  'T2 4669.725',  'T2 5206.375',  'T2 5804.697',  'T2 6471.778',  'T2 7215.521',  'T2 8044.736',
-           'T2 8969.245',  'T2 10000']]
-    y_treino = np.log10(dados_treino['Permeabilidade Gas']*1000)
-
-    X_teste = dados_teste[['T2 0.01',  'T2 0.011',  'T2 0.012',  'T2 0.014',  'T2 0.015',  'T2 0.017',  'T2 0.019',  'T2 0.021',  'T2 0.024',
-            'T2 0.027',  'T2 0.03',  'T2 0.033',  'T2 0.037',  'T2 0.041',  'T2 0.046',  'T2 0.051',  'T2 0.057',  'T2 0.064',
-            'T2 0.071',  'T2 0.079',  'T2 0.088',  'T2 0.098',  'T2 0.109',  'T2 0.122',  'T2 0.136',  'T2 0.152',  'T2 0.169',
-            'T2 0.189',  'T2 0.21',  'T2 0.234',  'T2 0.261',  'T2 0.291',  'T2 0.325',  'T2 0.362',  'T2 0.404',  'T2 0.45',
-            'T2 0.502',  'T2 0.56',  'T2 0.624',  'T2 0.696',  'T2 0.776',  'T2 0.865',  'T2 0.964',  'T2 1.075',  'T2 1.199',
-            'T2 1.337',  'T2 1.49',  'T2 1.661',  'T2 1.852',  'T2 2.065',  'T2 2.303',  'T2 2.567',  'T2 2.862',  'T2 3.191',
-            'T2 3.558',  'T2 3.967',  'T2 4.423',  'T2 4.931',  'T2 5.497',  'T2 6.129',  'T2 6.834',  'T2 7.619',  'T2 8.494',
-            'T2 9.471',  'T2 10.559',  'T2 11.772',  'T2 13.125',  'T2 14.634',  'T2 16.315',  'T2 18.19',  'T2 20.281',  'T2 22.612',
-            'T2 25.21',  'T2 28.107',  'T2 31.337',  'T2 34.939',  'T2 38.954',  'T2 43.431',  'T2 48.422',  'T2 53.986',  'T2 60.19',
-            'T2 67.108',  'T2 74.82',  'T2 83.418',  'T2 93.004',  'T2 103.693',  'T2 115.609',  'T2 128.895',  'T2 143.708',  'T2 160.223',
-            'T2 178.636',  'T2 199.165',  'T2 222.053',  'T2 247.572',  'T2 276.023',  'T2 307.744',  'T2 343.11',  'T2 382.54',  'T2 426.502',
-            'T2 475.516',  'T2 530.163',  'T2 591.09',  'T2 659.019',  'T2 734.754',  'T2 819.192',  'T2 913.335',  'T2 1018.296',  'T2 1135.32',
-            'T2 1265.792',  'T2 1411.258',  'T2 1573.441',  'T2 1754.262',  'T2 1955.864',  'T2 2180.633',  'T2 2431.234',  'T2 2710.634',  'T2 3022.143',
-            'T2 3369.45',  'T2 3756.671',  'T2 4188.391',  'T2 4669.725',  'T2 5206.375',  'T2 5804.697',  'T2 6471.778',  'T2 7215.521',  'T2 8044.736',
-            'T2 8969.245',  'T2 10000']]
-    y_teste = np.log10(dados_teste['Permeabilidade Gas']*1000)
-
-    pls6 = PLSRegression(n_components=6)
-    pls6.fit(X_treino, y_treino)
-  
-    y_pred_treino = pls6.predict(X_treino)
-    y_pred_teste = pls6.predict(X_teste)
+           'T2 8969.245',  'T2 10000.0']):
 
 
+    """
+    A regressão dos coeficientes da modelagem Coates proposta por Rios et al (2011).
 
-    dados_treino['Permeabilidade Prevista Rios'] = (10**y_pred_treino)/1000
-    dados_teste['Permeabilidade Prevista Rios'] = (10**y_pred_teste)/1000
+    Args:
+        dados_treino (pandas.DataFrame): Dataframe com os dados necessários para o treinamento do modelo.
+        dados_teste (pandas.DataFrame): Dataframe com os dados necessários avaliação do modelo.
+    Returns:
+        Retorna a regressão realizada (reg_novo), os coeficientes da regressão (coeficientes_novo), um dataframe com os dados previstos concatenado
+        com o DataFrame informado, e o erro sigma.
+    """
 
-    return dados_treino, dados_teste
+    if Log == True:
+      X_treino = dados_treino[C_distribuicao]
+      y_treino = np.log10(dados_treino[N_permeabilidade]*1000)
+
+      X_teste = dados_teste[C_distribuicao]
+      y_teste = np.log10(dados_teste[N_permeabilidade]*1000)
+
+      plsr = PLSRegression(n_components=N_componentes)
+      plsr.fit(X_treino, y_treino)
+
+      y_pred_treino = plsr.predict(X_treino)
+      y_pred_teste = plsr.predict(X_teste)
+
+      dados_treino['Permeabilidade Prevista Rios'] = (10**y_pred_treino)/1000
+      dados_teste['Permeabilidade Prevista Rios'] = (10**y_pred_teste)/1000
+
+    else:
+
+      X_treino = dados_treino[C_distribuicao]
+      y_treino = dados_treino[N_permeabilidade]
+
+      X_teste = dados_teste[C_distribuicao]
+      y_teste = dados_teste[N_permeabilidade]
+
+      plsr = PLSRegression(n_components=N_componentes)
+      plsr.fit(X_treino, y_treino)
+
+      y_pred_treino = plsr.predict(X_treino)
+      y_pred_teste = plsr.predict(X_teste)
+
+      dados_treino['Permeabilidade Prevista Rios'] = y_pred_treino
+      dados_teste['Permeabilidade Prevista Rios'] = y_pred_teste
+
+
+      #Erro Sigma
+    k_p_treino = np.log10(dados_treino['Permeabilidade Prevista Rios'])
+    k_g_treino = np.log10(dados_treino[N_permeabilidade])
+    N = len(k_p_treino)
+    soma = np.sum((k_p_treino-k_g_treino)**2)
+    raiz = np.sqrt(soma/N)
+    sigma_treino = 10**(raiz)
+
+    k_p_teste = np.log10(dados_teste['Permeabilidade Prevista Rios'])
+    k_g_teste = np.log10(dados_teste[N_permeabilidade])
+    N = len(k_p_treino)
+    soma = np.sum((k_p_teste-k_g_teste)**2)
+    raiz = np.sqrt(soma/N)
+    sigma_teste = 10**(raiz)
+
+
+
+
+    return plsr, dados_treino[['Amostra', N_permeabilidade,
+                               'Permeabilidade Prevista Rios']], dados_teste[['Amostra',
+                                N_permeabilidade,
+                                'Permeabilidade Prevista Rios']], sigma_treino, sigma_teste
+
+
 
 def RegressaoFZI(dados, modelos):
     
