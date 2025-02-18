@@ -290,7 +290,8 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
         razao_t2 = float(np.exp(sum_num/sum_den))
         media_ponderada_log.append((razao_t2))
     # Calculando o T2_log usado na função do Kenyon et al (1988)
-
+    df['T2 Ponderado Log"] = media_ponderada_log
+                              
     if Componentes_t2 == True:
       df = pd.concat([df, dados_lab[['A_NMR', 'T2_NMR',
                                      'A1', 'T21',
@@ -466,7 +467,12 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
 
 ##################################################################################  Próxima Função  ##################################################################################
 
-def ProcessamentoDadosSDR (Dataframe):
+def ProcessamentoDadosSDR (Dataframe,
+                           Amostra = 'Amostra', T2 = 'T2 Ponderado Log',
+                           Porosidade_Gas = 'Porosidade Gas',
+                           Porosidade_RMN = 'Porosidade RMN',
+                           Permeabilidade_Gas = 'Permeabilidade Gas',
+                           Cluster = False, N_Cluster = 'Litofacies'):
   
   """
     Seleciona do DataFrame informado apenas os parâmetros necessário para realizar a regressção proposta por Kenyon et al (1988).
@@ -480,13 +486,14 @@ def ProcessamentoDadosSDR (Dataframe):
   """
   df = pd.DataFrame({
         'Amostra': Dataframe['Amostra'],
-        'Litofacies': Dataframe['Litofacies'],
         'T2': Dataframe['T2 Ponderado Log'],
         'Porosidade RMN': Dataframe['Porosidade RMN'],
         'Porosidade Gas': Dataframe['Porosidade Gas'],
         'Permeabilidade Gas': Dataframe['Permeabilidade Gas']
         })
 
+  if Cluster == True:
+    df[N_Cluster] = Dataframe[N_Cluster]
   return df
 
 ##################################################################################  Próxima Função  ##################################################################################
