@@ -485,11 +485,11 @@ def ProcessamentoDadosSDR (Dataframe,
 
   """
   df = pd.DataFrame({
-        'Amostra': Dataframe['Amostra'],
-        'T2': Dataframe['T2 Ponderado Log'],
-        'Porosidade RMN': Dataframe['Porosidade RMN'],
-        'Porosidade Gas': Dataframe['Porosidade Gas'],
-        'Permeabilidade Gas': Dataframe['Permeabilidade Gas']
+        'Amostra': Dataframe[Amostra],
+        'T2': Dataframe[T2],
+        'Porosidade RMN': Dataframe[Porosidade_RMN],
+        'Porosidade Gas': Dataframe[Porosidade_Gas],
+        'Permeabilidade Gas': Dataframe[Permeabilidade_Gas]
         })
 
   if Cluster == True:
@@ -498,32 +498,43 @@ def ProcessamentoDadosSDR (Dataframe,
 
 ##################################################################################  Próxima Função  ##################################################################################
 
-def ProcessamentoDadosCoates (Dados):
+def ProcessamentoDadosCoates (Dataframe,
+                              Amostra = 'Amostra', BVI = 'BVI', FFI = 'FFI',
+                              Porosidade_Gas = 'Porosidade Gas', Porosidade_RMN = 'Porosidade RMN',
+                              Permeabilidade_Gas = 'Permeabilidade Gas',
+                              Cluster = False, N_Cluster = 'Litofacies'):
 
   """
     Seleciona do DataFrame informado apenas os parâmetros necessário para realizar a regressção proposta por Coates et al (1999).
 
     Args:
-        Dados (pandas.DataFrame): DataFrame com os dados da amostra, litofácies, o valor de BVI, FFI, porosidade RMN e Gás, e permeabilidade Gas.
+        Dataframe (pandas.DataFrame): DataFrame com os dados da amostra, litofácies, o valor de BVI, FFI, porosidade RMN e Gás, e permeabilidade Gas.
 
     Returns:
         pandas.DataFrame: Retorna um Dataframe menor com as informações essenciais para a regressão dos dados de permeabilidade proposta por Coates et al (1999).
 
   """
-  dados = pd.DataFrame({
-        'Amostra': Dados['Amostra'],
-        'Litofacies': Dados['Litofacies'],
-        'BVI': Dados['BVI'],
-        'FFI': Dados['FFI'],
-        'Porosidade RMN': Dados['Porosidade RMN'],
-        'Porosidade Gas': Dados['Porosidade Gas'],
-        'Permeabilidade Gas': Dados['Permeabilidade Gas']
+  df = pd.DataFrame({
+        'Amostra': Dataframe[Amostra],
+        'BVI': Dataframe[BVI],
+        'FFI': Dataframe[FFI],
+        'Porosidade RMN': Dataframe[Porosidade_RMN],
+        'Porosidade Gas': Dataframe[Porosidade _Gas],
+        'Permeabilidade Gas': Dataframe[Permeabilidade_Gas]
         })
-  return dados
+                                
+  if Cluster == True:
+    df[N_Cluster] = Dataframe[N_Cluster]
+                                
+  return df
 
 ##################################################################################  Próxima Função  ##################################################################################
 
-def ProcessamentoDadosHan (Dados):
+def ProcessamentoDadosHan (Dataframe,
+                           Amostra = 'Amostra', S1 = 'S1Han', S2 = 'S2Han', S3 = 'S3Han', S4 = 'S4Han',
+                           Porosidade_Gas = 'Porosidade Gas', Porosidade_RMN = 'Porosidade RMN',
+                           Permeabilidade_Gas = 'Permeabilidade Gas',
+                           Cluster = False, N_Cluster = 'Litofacies'):
 
   """
     Seleciona do DataFrame informado apenas os parâmetros necessário para realizar a regressção proposta por Han et al (2018).
@@ -535,48 +546,56 @@ def ProcessamentoDadosHan (Dados):
         pandas.DataFrame: Retorna um Dataframe menor com as informações essenciais para a regressão dos dados de permeabilidade proposta por Han et al (2018).
 
   """
-  dados = pd.DataFrame({'Amostra': Dados['Amostra'],
-                          'Litofacies': Dados['Litofacies'],
-                          'Permeabilidade Gas': Dados['Permeabilidade Gas'],
-                          'Porosidade Gas': Dados['Porosidade Gas'],
-                          'Porosidade RMN': Dados['Porosidade RMN'],
-                          'S1Han': Dados['S1Han'],
-                          'S2Han': Dados['S2Han'],
-                          'S3Han': Dados['S3Han'],
-                          'S4Han': Dados['S4Han']
-                          }).replace(0, np.nan).dropna().reset_index().drop('index', axis = 1)
+  df = pd.DataFrame({'Amostra': Dataframe[Amostra],
+                     'Permeabilidade Gas': Dataframe[Permeabilidade_Gas],
+                     'Porosidade Gas': Dataframe[Porosidade_Gas],
+                     'Porosidade RMN': Dataframe[Porosidade_RMN],
+                     'S1Han': Dataframe[S1],
+                     'S2Han': Dataframe[S2],
+                     'S3Han': Dataframe[S3],
+                     'S4Han': Dataframe[S4]
+                    }).replace(0, np.nan).dropna().reset_index().drop('index', axis = 1)
+                             
+  if Cluster == True:
+    df[N_Cluster] = Dataframe[N_Cluster]
 
-  return dados
+  return df
 
 ##################################################################################  Próxima Função  ##################################################################################
 
-def ProcessamentoDadosGe (Dados):
+def ProcessamentoDadosGe (Dataframe,
+                          Amostra = 'Amostra', S1 = 'S1Ge', S3 = 'S3Ge', S4 = 'S4Ge',
+                          Porosidade_Gas = 'Porosidade Gas', Porosidade_RMN = 'Porosidade RMN',
+                          Permeabilidade_Gas = 'Permeabilidade Gas',
+                          Cluster = False, N_Cluster = 'Litofacies'):
 
   """
     Seleciona do DataFrame informado apenas os parâmetros necessário para realizar a regressção proposta por Ge et al (2017).
 
     Args:
-        Dados (pandas.DataFrame): DataFrame com os dados da amostra, litofácies, o valor das frações da curva no tempo de corte S1, S3 e S$, porosidade RMN e Gás, e permeabilidade Gas.
+        Dataframe (pandas.DataFrame): DataFrame com os dados da amostra, litofácies, o valor das frações da curva no tempo de corte S1, S3 e S$, porosidade RMN e Gás, e permeabilidade Gas.
 
     Returns:
         pandas.DataFrame: Retorna um Dataframe menor com as informações essenciais para a regressão dos dados de permeabilidade proposta por Ge et al (2017).
 
   """
-  dados = pd.DataFrame({'Amostra': Dados['Amostra'],
-                          'Litofacies': Dados['Litofacies'],
-                          'Permeabilidade Gas': Dados['Permeabilidade Gas'],
-                          'Porosidade Gas': Dados['Porosidade Gas'],
-                          'Porosidade RMN': Dados['Porosidade RMN'],
-                          'S1Ge': Dados['S1Ge'],
-                          'S3Ge': Dados['S3Ge'],
-                          'S4Ge': Dados['S4Ge']
-                          }).replace(0, np.nan).dropna().reset_index().drop('index', axis = 1)
+  dados = pd.DataFrame({'Amostra': Dataframe[Amostra],
+                        'Permeabilidade Gas': Dataframe[Permeabilidade_Gas],
+                        'Porosidade Gas': Dataframe[Porosidade_Gas],
+                        'Porosidade RMN': Dataframe[Porosidade_RMN],
+                        'S1Ge': Dataframe[S1],
+                        'S3Ge': Dataframe[S2],
+                        'S4Ge': Dataframe[S4]
+                       }).replace(0, np.nan).dropna().reset_index().drop('index', axis = 1)
+  if Cluster == True:
+    df[N_Cluster] = Dataframe[N_Cluster]
 
   return dados
 
 ##################################################################################  Próxima Função  ##################################################################################
 
 def ProcessamentoDistribuicaoTreinoTeste (Dados_Treino, Dados_Teste,
+                                          Log = False, Permeabilidade = 'Permeabilidade Gas',
                                           Valores = ['T2 0.01',  'T2 0.011',  'T2 0.012',  'T2 0.014',  'T2 0.015',  'T2 0.017',  'T2 0.019',  'T2 0.021',  'T2 0.024',
                                           'T2 0.027',  'T2 0.03',  'T2 0.033',  'T2 0.037',  'T2 0.041',  'T2 0.046',  'T2 0.051',  'T2 0.057',  'T2 0.064',
                                           'T2 0.071',  'T2 0.079',  'T2 0.088',  'T2 0.098',  'T2 0.109',  'T2 0.122',  'T2 0.136',  'T2 0.152',  'T2 0.169',
@@ -597,7 +616,7 @@ def ProcessamentoDistribuicaoTreinoTeste (Dados_Treino, Dados_Teste,
     Seleciona do DataFrame informado as colunas da distribuição de Tamanho de Poros.
 
     Args:
-        Dataframe (pandas.DataFrame): DataFrame com os dados da amostra, litofácies, o valor das frações da curva no tempo de corte S1, S3 e S$, porosidade RMN e Gás, e permeabilidade Gas.
+        Dados_Treino (pandas.DataFrame): DataFrame com os dados da amostra, litofácies, o valor das frações da curva no tempo de corte S1, S3 e S3, porosidade RMN e Gás, e permeabilidade Gas.
 
     Returns:
         X_treino (pandas.DataFrame): Retorna um Dataframe com as informações essenciais para a regressão dos dados de permeabilidade que utilizem a curva de distribuição de tamanho de poros.
@@ -606,12 +625,18 @@ def ProcessamentoDistribuicaoTreinoTeste (Dados_Treino, Dados_Teste,
         y_teste (numpy.array): Retorna um numpy.array com as informações da permeabilidade de cada amostra para avaliação do modelo.
 
     """
-
     X_treino = Dados_Treino[Valores]
-    y_treino = np.log10(Dados_Treino['Permeabilidade Gas']*1000)
-    
+    y_treino = Dados_Treino[Permeabilidade]
+      
     X_teste = Dados_Teste[Valores]
-    y_teste = np.log10(Dados_Teste['Permeabilidade Gas']*1000)
+    y_teste = Dados_Teste[Permeabilidade]
+                                            
+    if Log == True:
+      X_treino = Dados_Treino[Valores]
+      y_treino = np.log10(Dados_Treino[Permeabilidade]*1000)
+      
+      X_teste = Dados_Teste[Valores]
+      y_teste = np.log10(Dados_Teste[Permeabilidade]*1000)
     
     return X_treino, y_treino, X_teste, y_teste
 
