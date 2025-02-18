@@ -697,7 +697,7 @@ def ProcessamentoReservatorio (Dados_com_Previsao, Modelagens = ['SDR']):
 
 ##################################################################################  Próxima Função  ##################################################################################
 
-def DadosRidgeLine(Dataframe, N_t2 = 3, Litofacies = False, Poco = False,
+def DadosRidgeLineTeste(Dataframe, N_t2 = 3, Cluster = False, Poco = False, N_poco = 'Poço', N_cluster = 'Litofacies',
                    Distribuicao = ['T2 0.01',  'T2 0.011',  'T2 0.012',  'T2 0.014',  'T2 0.015',  'T2 0.017',  'T2 0.019',  'T2 0.021',  'T2 0.024',
                                    'T2 0.027',  'T2 0.03',  'T2 0.033',  'T2 0.037',  'T2 0.041',  'T2 0.046',  'T2 0.051',  'T2 0.057',  'T2 0.064',
                                    'T2 0.071',  'T2 0.079',  'T2 0.088',  'T2 0.098',  'T2 0.109',  'T2 0.122',  'T2 0.136',  'T2 0.152',  'T2 0.169',
@@ -721,6 +721,10 @@ def DadosRidgeLine(Dataframe, N_t2 = 3, Litofacies = False, Poco = False,
         Dados (pandas.DataFrame): DataFrame com os dados de distribuição T2 jpa formato em colunas.
         Distribuicao (list): Lista das colunas da distribuição T2.
         N_t2 (int): Número em que acaba a contagem das letras de cada coluna com o valor do tempo.
+        Cluster (bool): Se o usuário quiser obter também as informações de alguma classificação, como as litofácies.
+        N_cluster (str): Nome da coluna da classificação.
+        Poco (bool): Se o usuário quiser obter também as informações do poço.
+        N_poco (str): Nome da coluna do poço.
 
     Returns:
         pandas.DataFrame: Retorna um DataFrame com os valores em lista das distribuições T2 e os tempos respectivos.
@@ -745,10 +749,10 @@ def DadosRidgeLine(Dataframe, N_t2 = 3, Litofacies = False, Poco = False,
   lista_amostra = []
   lista_t2 = []
   lista_litofacie = []
-  lista_poço = []
+  lista_poco = []
   for i in np.arange(len(Dataframe)):
       for j in np.arange(len(Dados['Tempo Distribuicao'][0])):
-          lista_amostra.append(Dados['Amostra'][i])
+          lista_amostra.append(Dataframe['Amostra'][i])
           lista_tempo.append(Dados['Tempo Distribuicao'][i][j])
           lista_t2.append(Dados['Porosidade i'][i][j])
 
@@ -758,15 +762,15 @@ def DadosRidgeLine(Dataframe, N_t2 = 3, Litofacies = False, Poco = False,
   if Poco == True:
     for i in np.arange(len(Dataframe)):
       for j in np.arange(len(Dados['Tempo Distribuicao'][0])):
-        lista_poço.append(Dados['Poço'][i])
-    df['Poco'] = lista_poco
+        lista_poco.append(Dataframe[N_poco][i])
+    df[N_poco] = lista_poco
 
-  if Litofacies == True:
+  if Cluster == True:
     
     for i in np.arange(len(Dataframe)):
       for j in np.arange(len(Dados['Tempo Distribuicao'][0])):
-          lista_litofacie.append(Dados['Categoria Litofacies'][i])
-    df['Litofacies'] = lista_litofacie
+          lista_litofacie.append(Dataframe[N_cluster][i])
+    df[N_cluster] = lista_litofacie
                               
     
   return df
