@@ -729,7 +729,7 @@ def DadosRidgeLine(Dataframe, N_t2 = 3, Litofacies = False, Poco = False,
 
   porosidade_i = []
   tempo_distribuicao = []
-  for i in np.arange(len(Dados)):
+  for i in np.arange(len(Dataframe)):
     phi_i = []
     tempo = []
     for j in np.arange(len(Distribuicao)):
