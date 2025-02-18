@@ -642,7 +642,10 @@ def ProcessamentoDistribuicaoTreinoTeste (Dados_Treino, Dados_Teste,
 
 ##################################################################################  Próxima Função  ##################################################################################
 
-def ProcessamentoReservatorio (Dados_com_Previsao, Modelagens = ['SDR']):
+def ProcessamentoReservatorio (Dados_com_Previsao, Porosidade_fracao = False,
+                               K_base = 'Permeabilidade Gas', P_Base = 'Porosidade Gas', P_novo = 'Porosidade RMN',
+                               
+                               Modelagens = ['SDR']):
 
   
   """
@@ -656,10 +659,15 @@ def ProcessamentoReservatorio (Dados_com_Previsao, Modelagens = ['SDR']):
         pandas.DataFrame: Retorna um acréscimo ao DataFrame com os valores dos parâmetros petrofísicos de reservatório.
 
   """
+  k_gas = Dados_com_Previsao[K_base]
+  if Porosidade_Fracao == True:
+    phi_gas = Dados_com_Previsao[P_Base]/100
+    phi_rmn = Dados_com_Previsao[P_novo]/100
 
-  k_gas = Dados_com_Previsao['Permeabilidade Gas']
-  phi_gas = Dados_com_Previsao['Porosidade Gas']
-  phi_rmn = Dados_com_Previsao['Porosidade RMN']
+  else:
+    phi_gas = Dados_com_Previsao[P_Base]
+    phi_rmn = Dados_com_Previsao[P_novo] 
+  
 
   phi_z_gas = phi_gas/(1-phi_gas)
   phi_z_rmn = phi_rmn/(1-phi_rmn)
