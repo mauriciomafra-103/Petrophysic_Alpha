@@ -737,9 +737,9 @@ def DadosRidgeLine(Dataframe, N_t2 = 3, Litofacies = False, Poco = False,
       tempo.append(float(Distribuicao[j][N_t2:]))
       porosidade_i.append(phi_i)
       tempo_distribuicao.append(tempo)
-    
-  Dados['Porosidade i'] = porosidade_i
-  Dados['Tempo Distribuicao'] = tempo_distribuicao
+
+  Dados = pd.DataFrame({'Porosidade i': porosidade_i,
+                        'Tempo Distribuicao': tempo_distribuicao})
     
   lista_tempo = []
   lista_amostra = []
