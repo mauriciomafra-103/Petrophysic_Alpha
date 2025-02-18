@@ -642,7 +642,7 @@ def ProcessamentoDistribuicaoTreinoTeste (Dados_Treino, Dados_Teste,
 
 ##################################################################################  Próxima Função  ##################################################################################
 
-def ProcessamentoReservatorio (Dados_com_Previsao, Porosidade_fracao = False,
+def ProcessamentoReservatorio (Dados_com_Previsao, Porosidade_percentual = False,
                                K_base = 'Permeabilidade Gas', P_Base = 'Porosidade Gas', P_novo = 'Porosidade RMN',
                                
                                Modelagens = ['SDR']):
@@ -660,7 +660,7 @@ def ProcessamentoReservatorio (Dados_com_Previsao, Porosidade_fracao = False,
 
   """
   k_gas = Dados_com_Previsao[K_base]
-  if Porosidade_Fracao == True:
+  if Porosidade_percentual == True:
     phi_gas = Dados_com_Previsao[P_Base]/100
     phi_rmn = Dados_com_Previsao[P_novo]/100
 
