@@ -116,23 +116,26 @@ def HistogramaPermeabilidade(Dados, permeabilidade):
   plt.show()
 
 
-def VisualizarDistribuicaoT2 (Dados, CBW = False, Anotacao = False, Salvar = False):
+def VisualizarDistribuicaoT2 (Dados, CBW = False, Anotacao = False, Salvar = False, N_porosidade = 'Porosidade_i',
+                              N_distribuicao = 'Tempo Distribuicao', N_amostra = 'Amostra',
+                              V_arg = 3.2, V_capilar = 92.0, Xticks_list = [0.3, 1, 3, 10, 92,  300, 1000, 5000],
+                              Ylim = [0, 1], Xlim = [0.01, 10000], FigSize = (20,6)):
 
     for i in np.arange(0, (len(Dados)-1), 2):
-        amostra1 = Dados['Amostra'][i]
-        amostra2 = Dados['Amostra'][i+1]
+        amostra1 = Dados[N_amostra][i]
+        amostra2 = Dados[N_amostra][i+1]
         titulo1 = 'Sample: ' + amostra1
         titulo2 = 'Sample: ' + amostra2
         eixo_x = 'Relaxation Time (ms)'
         eixo_y = r'$\phi$ (%)'
-        xticks_list = [0.3, 1, 3, 10, 92,  300, 1000, 5000]
-        xlim = [0.01, 10000]
-        ylim = [0, 1]
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize = (20,6))
+        xticks_list = Xticks_list
+        xlim = Xlim
+        ylim = Ylim
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize = FigSize)
 
 
-        x1 = np.array(list(Dados['Tempo Distribuicao'][i]))
-        y1 = np.array(list(Dados['Porosidade i'][i]))
+        x1 = np.array(list(Dados[N_distribuicao][i]))
+        y1 = np.array(list(Dados[N_porosidade][i]))
         ax1.plot(x1,y1)
         ax1.set_xlabel(eixo_x)
         ax1.set_ylabel(eixo_y)
@@ -146,15 +149,15 @@ def VisualizarDistribuicaoT2 (Dados, CBW = False, Anotacao = False, Salvar = Fal
         if CBW:
 
           # Região CBW (x < 3.2)
-          ax1.fill_between(x1, y1, where=(x1 < 3.2), alpha=0.3, color='orange')
+          ax1.fill_between(x1, y1, where=(x1 < V_arg), alpha=0.3, color='orange')
           ax1.text(0.5, y1[30] / 2, 'CBW', fontsize=12)
 
           # Região CBP (3.2 ≤ x < 33)
-          ax1.fill_between(x1, y1, where=((x1 >= 3.2) & (x1 < 92)), alpha=0.3, color='yellow')
+          ax1.fill_between(x1, y1, where=((x1 >= V_arg) & (x1 < V_capilar)), alpha=0.3, color='yellow')
           ax1.text(7, y1[30] / 2, 'CBP', fontsize=12)
 
           # Região FFI (33 ≤ x ≤ 10000)
-          ax1.fill_between(x1, y1, where=((x1 >= 92) & (x1 <= 10000)), alpha=0.3, color='green')
+          ax1.fill_between(x1, y1, where=((x1 >= V_capilar) & (x1 <= 10000)), alpha=0.3, color='green')
           ax1.text(300, y1[30] / 2, 'FFI', fontsize=12)
 
 
@@ -168,8 +171,8 @@ def VisualizarDistribuicaoT2 (Dados, CBW = False, Anotacao = False, Salvar = Fal
             ax1.axvline(x=Dados['T2 Medio Niumag'][i], color='lightgray')
 
 
-        x2 = np.array(list(Dados['Tempo Distribuicao'][i+1]))
-        y2 = np.array(list(Dados['Porosidade i'][i+1]))
+        x2 = np.array(list(Dados[N_distribuicao][i+1]))
+        y2 = np.array(list(Dados[N_porosidade][i+1]))
         ax2.plot(x2, y2)
         ax2.set_xlabel(eixo_x)
         ax2.set_ylabel(eixo_y)
@@ -190,11 +193,11 @@ def VisualizarDistribuicaoT2 (Dados, CBW = False, Anotacao = False, Salvar = Fal
 
         if CBW == True:
             ax2.text(0.5,y2[30]/2, 'CBW', fontsize = 12)
-            ax2.fill_between(x2, y2, where = x1 < 3, alpha = 0.3, color = 'orange')
+            ax2.fill_between(x2, y2, where = x1 < V_arg, alpha = 0.3, color = 'orange')
             ax2.text(7,y2[30]/2, 'CBP', fontsize = 12)
-            ax2.fill_between(x2, y2, where = (x1 >= 3) & (x1 < 92), alpha = 0.3, color = 'yellow')
+            ax2.fill_between(x2, y2, where = (x1 >= V_arg) & (x1 < V_capilar), alpha = 0.3, color = 'yellow')
             ax2.text(300,y2[30]/2, 'FFI', fontsize = 12)
-            ax2.fill_between(x2, y2, where = (x1 >= 92) & (x1 <= 10000), alpha = 0.3, color = 'green')
+            ax2.fill_between(x2, y2, where = (x1 >= V_capilar) & (x1 <= 10000), alpha = 0.3, color = 'green')
 
 
 
