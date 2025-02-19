@@ -361,27 +361,27 @@ def RegressaoRios(dados_treino, dados_teste, N_permeabilidade = 'Permeabilidade 
 
 
 
-def RegressaoFZI(dados, modelos):
+def RegressaoFZI(Dados, Modelos = ['SDR'], N_Cluster = 'Litofacies'):
     
     """
     A regressão FZI.
 
     Args:
         dados (pandas.DataFrame): Dataframe com os dados necessários para modelagem.
-        modelos (list): Lista com os modelos utilizados para obter o FZI.
+        Modelos (list): Lista com os modelos utilizados para obter o FZI.
     Returns:
         Retorna a regressão FZI para cada litofácie.
     """
 
-    lito = dados['Litofacies'].unique()
+    lito = Dados[N_Cluster].unique()
     coef = []
 
     for i in np.arange(len(lito)):
-        for j in np.arange(len(modelos)):
-            df_dados = dados.loc[dados['Litofacies'] == dados['Litofacies'].unique()[i]].reset_index().drop('index', axis = 1)
-            rqi = df_dados['RQI_' + modelos[j]]
+        for j in np.arange(len(Modelos)):
+            df_dados = Dados.loc[Dados[N_Cluster] == Dados[N_Cluster].unique()[i]].reset_index().drop('index', axis = 1)
+            rqi = df_dados['RQI_' + Modelos[j]]
 
-            if modelos[j] == "Gas":
+            if Modelos[j] == "Gas":
                 phi = df_dados['Phi_z_Gas']
     
             else:
@@ -396,14 +396,17 @@ def RegressaoFZI(dados, modelos):
             atributos = dados_calculo[['const', 'Phi']]
             rotulos = dados_calculo[['RQI']]
             reg_ols_log = sm.OLS(rotulos, atributos, hasconst=True).fit()
-            coef.append([dados['Litofacies'].unique()[i] + '_' + modelos[j], reg_ols_log.params[0], reg_ols_log.params[1], reg_ols_log.params[0]+reg_ols_log.params[1]])
+            coef.append([Dados[N_Cluster].unique()[i] + '_' + Modelos[j], reg_ols_log.params[0], reg_ols_log.params[1], reg_ols_log.params[0]+reg_ols_log.params[1]])
+    nome = 'Cluster: '+ N_Cluster
+    c = pd.DataFrame(coef).rename(columns={0: nome, 1:'b', 2:'a', 3:'FZI'})
+    df = pd.concat([Dados, c], axis = 1)
+    return df
 
-    c = pd.DataFrame(coef).rename(columns={0: 'Litofacies', 1:'b', 2:'a', 3:'FZI'})
-    return c
 
 
-
-def RegressaoComponentesT2 (Dados, n = 0, P0 = (1, 0.1), Params_Init = [0.8, 0.001, 0.1, 0.01, 0.1, 0.1]):
+def RegressaoComponentesT2 (Dados, n = 0, P0 = (0.8, 0.01), Params_Init = [0.8, 0.001, 0.1, 0.01, 0.1, 0.1],
+                            Chute = False, N_chute = 0,
+                            T_relaxacao = "Tempo Relaxacao", A_relaxacao = "Amplitude Relaxacao", Amostra = 'Amostra'):
     """
     A regressão da curva de relaxação para obter as componentes T2 de uma única .
 
@@ -432,8 +435,8 @@ def RegressaoComponentesT2 (Dados, n = 0, P0 = (1, 0.1), Params_Init = [0.8, 0.0
         return np.mean((y - y_pred)**2)
     
     
-    time = np.array(Dados['Tempo Relaxacao'][n])  # Coloque seus valores de tempo aqui
-    A_t = np.array(Dados['Amplitude Relaxacao'][n])  # Coloque seus valores de A(t) aqui
+    time = np.array(Dados[T_relaxacao][n])  # Coloque seus valores de tempo aqui
+    A_t = np.array(Dados[A_relaxacao][n])/df_geral_teste[A_relaxacao][n].max()  # Coloque seus valores de A(t) aqui
     
     # Realizar o ajuste usando curve_fit
     p0 = P0  # Valores iniciais para a e b
@@ -442,8 +445,19 @@ def RegressaoComponentesT2 (Dados, n = 0, P0 = (1, 0.1), Params_Init = [0.8, 0.0
     # Parâmetros ajustados
     anmr_fit, bnmr_fit = params
     
-    # Chute inicial para os parâmetros (a, b, c, d, g, h)
-    params_init = Params_Init
+    if Chute == True:
+      chute = [[0.8, 0.001, 0.001, 0.001, 0.001, 0.001],
+               [0.8, 0.001, 0.01, 0.01, 0.1, 0.1],
+               [0.825, 0.001, 0.01, 0.01, 0.01, 0.01],
+               [0.5, 0.01, 0.1, 0.001, 0.1, 0.01],
+               [1, 0.01, 0.01, 0.01, 0.1, 0.001],
+               [0.5, 0.0001, 0.001, 0.01, 0.1, 0.1],
+               [0.5, 0.0001, 0.0001, 0.01, 0.01, 0.01]]
+      params_init = chute[N_chute]
+
+    else:
+      # Chute inicial para os parâmetros (a, b, c, d, g, h)
+      params_init = Params_Init
     
     # Minimização do erro usando minimize (Método dos mínimos quadrados)
     result = minimize(mse, params_init, args=(time, A_t))
@@ -474,9 +488,9 @@ def RegressaoComponentesT2 (Dados, n = 0, P0 = (1, 0.1), Params_Init = [0.8, 0.0
     else:
           print('O ajuste do modelo não é adequado. Considere revisar os parâmetros iniciais.')
     
-    coef = pd.DataFrame({'Amostra': Dados['Amostra'][n],
-                           'Amplitude Relaxacao': [A_t],
-                           'Tempo Relaxacao': [time],
+    coef = pd.DataFrame({'Amostra': Dados[Amostra][n],
+                           A_relaxacao: [A_t],
+                           T_relaxacao: [time],
                            'A_NMR': [anmr_fit],
                            'T2_NMR': [1/bnmr_fit]})
     coef['A1'] = [a_fit]
