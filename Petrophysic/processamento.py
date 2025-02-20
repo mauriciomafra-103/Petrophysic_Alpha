@@ -15,10 +15,12 @@ import geopandas as gpd
 from shapely.geometry import Point  # Exemplo de geometria
 
 
-def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Pontos_inversao,
+def ObtencaoDadosNiumagTeste(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Pontos_inversao,
                         Relaxacao = False, Distribuicao = False, T2_niumag = False, Erro = False, Ruido = False,
-                        T2_Amplitudes = False, Poco = False, 
-                        N_amostra = 9, N_poco_i = 4, N_poco_f = 0, N_amp = 3):
+                        T2_Amplitudes = False, Poco = False,
+                        C_amostra = 9, N_poco_i = 4, N_poco_f = 0, N_amp = 3,
+                        Inversao_Thikonov = False, Inversao_AntonnTalankin = False, Nom_amplitudes = 'Picos Amplitudes', Nom_Tempo = 'Tempo Relaxacao',
+                        T2_minimo = 0.01, T2_maximo = 10000, T2_range = 128, Regularizador = 0.1):
 
 
     """
@@ -36,10 +38,18 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
           Erro (bool): Caso o usuário deseje o Erro Fiiting.
           T2_Amplitudes (bool): Caso o usuário deseje os picos das amplitudes da distribuição T2.
           Poco (bool): Caso o usuário tenha as informações dos poços contidas no nome das amostras.
-          N_amostra (int): Quantidade de caracteres que o nome da amostra tem.
+          C_amostra (int): Quantidade de caracteres que o nome da amostra tem.
           N_poco_i (int): Identificação do começo do nome do poço.
           N_poco_f (int): Identificação do final do nome do poço.
           N_amp (int): Identificação da quantidade de amplitudes desejadas.
+          Inversao_Thikonov (bool): Inversão da curva de relaxação seguindo o método de Tikhonov.
+          Inversao_AntonnTalankin (bool): Inversão da curva de relaxação seguindo o método de Antonn Talankin https://github.com/antontalankin/py-4-pp/tree/main/NMR_1D_T2_inversion/Anton.
+          Nom_amplitudes (str): Nome da coluna que contém as amplitudes.
+          Nom_Tempo (str): Nome da coluna que contém os tempos.
+          T2_minimo (float): Valor do tempo mínimo da curva de distribuição.
+          T2_maximo (float): Valor do tempo máximo da curva de distribuição.
+          T2_range (int): Quantidade de pontos da curva de distribuição.
+          Regularizador (float):  Regularizador de Tikhonov.
 
       Returns:
           pandas.DataFrame: Retorna um DataFrame com dados processados do Excel exportado pelo Software Niumag.
@@ -72,7 +82,7 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
     for i in np.arange(int(len(dados_niumag.columns)/7)):
       df = dados_niumag.T.reset_index().drop('index', axis = 1).T
 
-      nome = dados_niumag.columns[i*7][:N_amostra]
+      nome = dados_niumag.columns[i*7][:C_amostra]
       amostras.append(nome)
 
       if Poco == True:
@@ -122,7 +132,7 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
       df['Tempo Relaxacao'] = tempo_relaxacao
       df['Picos Relaxacao'] = amplitude_pico_niumag
       df['Picos Relaxacao Fitting'] = amplitude_pico_fitting
-    
+
     if Ruido == True:
       df['Sinal'] = amplitude_sinal_niumag
       df['Ruido'] = ruido_niumag
@@ -130,6 +140,86 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
     if Distribuicao == True:
       df['Tempo Distribuicao'] = tempo_distribuicao
       df['Distribuicao T2'] = distribuicao_t2
+    
+    if Inversao_Thikonov == True:
+      def InversaoThikonov(Dataframe, N_amostra = 0, N_amplitudes = Nom_amplitudes, N_Tempo = Nom_Tempo,
+                           T2_min = T2_minimo, T2_max = T2_maximo, T2_ran = T2_range, Lamb = Regularizador):
+        t = Dataframe[N_Tempo][N_amostra].astype(float)
+        a = df[N_amplitudes][N_amostra].astype(float)
+
+        # Definindo os limites e a faixa de T2
+        t2min = T2_min
+        t2max = T2_max
+        t2range = T2_ran  # número de bins de T2
+        T = np.linspace(np.log10(t2min), np.log10(t2max), t2range)
+        T2 = [pow(10, i) for i in T]
+        x, y = np.meshgrid(t, T2)
+
+        # Matriz de modelo
+        X = np.exp(-x/y).T
+        Y = np.array(a)
+
+        # Definindo o parâmetro de regularização
+        regularzador = Lamb
+        n_variables = X.shape[1]
+
+        # Matriz regularizada (Tikhonov)
+        ATA = np.dot(X.T, X) + regularzador * np.eye(n_variables)
+        ATb = np.dot(X.T, Y)
+
+        # Resolvendo o sistema regularizado
+        amplitude = np.linalg.solve(ATA, ATb)
+
+        # Função de erro (mínimos quadrados regularizados)
+        def FuncaoCusto(a):
+            return np.linalg.norm(X @ a - Y) ** 2 + regularzador * np.linalg.norm(a) ** 2
+
+        # Resolvendo a minimização com restrição de não negatividade
+        res = minimize(FuncaoCusto, np.zeros(n_variables), bounds=[(0, None)] * n_variables)
+
+        # Amplitude final
+        amplitude = res.x
+
+        return amplitude
+
+      inversao_t = []
+
+      for i in np.arange(len(df['Amostra'])):
+          a_niumag = InversaoThikonov(df, N_amostra = i, N_amplitudes = 'Picos Relaxacao', N_Tempo = 'Tempo Relaxacao')
+          inversao_t.append(a_niumag)
+
+      df['Inversao Thikonov'] = inversao_t
+    
+    if Inversao_AntonnTalankin == True:
+      def Inversao_AntonnTalankin(Dataframe, N_amostra = 0, N_amplitudes = Nom_amplitudes, N_Tempo = Nom_Tempo,
+                           T2_min = T2_minimo, T2_max = T2_maximo, T2_ran = T2_range, Lamb = Regularizador):
+        t = Dataframe[N_Tempo][N_amostra].astype(float)
+        a = df[N_amplitudes][N_amostra].astype(float)
+        # inversion
+        # set T2 limits & range
+        t2min = T2_min
+        t2max = T2_max
+        t2range = T2_ran # set numper of t2 bins
+        T=np.linspace(np.log10(t2min),np.log10(t2max), t2range)
+        T2=[pow(10,i) for i in T]
+        x,y = np.meshgrid(t, T2)
+        X = np.exp(-x/y).T
+        Y = np.array(a)
+        # set regularization parameter (0.5 as base case)
+        lamb = Lamb
+        n_variables=X.shape[1]
+        A = concatenate([X, np.sqrt(lamb)*np.eye(n_variables)])
+        B = concatenate([Y, np.zeros(n_variables)])
+        A1=nnls(A,B)
+        amplitude=A1[0]
+        return amplitude
+
+      amplitude_a = []
+      for i in np.arange(len(df['Amostra'])):
+        a_niumag = Inversao_AntonnTalankin(df, N_amostra = i, N_amplitudes = 'Picos Relaxacao', N_Tempo = 'Tempo Relaxacao')
+        amplitude_a.append(a_niumag)
+
+      df['Inversao Antonn Talankin'] = amplitude_a
 
     if T2_niumag == True:
       df['T2 Geometrico Niumag'] = t2gm_niumag
@@ -150,8 +240,6 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
           dados_A[j][i] = amp
       dados_A.columns = colunas[0:N_amp]
       df = pd.concat([df, dados_A], axis = 1)
-
-    df = df.sort_values(by = 'Amostra')
 
     return df
 
