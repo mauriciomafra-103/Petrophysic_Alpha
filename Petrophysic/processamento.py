@@ -872,8 +872,8 @@ def DadosRidgeLine(Dataframe, N_t2 = 3, Cluster = False, Poco = False, N_poco = 
   return df
 
 
-def InversaoThikonov(Dataframe, N_amostra = 0, N_amplitudes = Nom_amplitudes, N_Tempo = Nom_Tempo,
-                     T2_min = T2_minimo, T2_max = T2_maximo, T2_ran = T2_range, Lamb = Regularizador):
+def InversaoThikonov(Dataframe, N_amostra = 0, N_amplitudes = 'Picos Amplitudes', N_Tempo = 'Tempo Relaxacao',
+                     T2_min = 0.01, T2_max = 10000, T2_ran = 128, Lamb = 0.1):
                        
         t = Dataframe[N_Tempo][N_amostra].astype(float)
         a = df[N_amplitudes][N_amostra].astype(float)
