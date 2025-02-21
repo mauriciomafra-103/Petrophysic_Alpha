@@ -436,7 +436,7 @@ def RegressaoComponentesT2 (Dados, n = 0, P0 = (0.8, 0.01), Params_Init = [0.8, 
     
     
     time = np.array(Dados[T_relaxacao][n])  # Coloque seus valores de tempo aqui
-    A_t = np.array(Dados[A_relaxacao][n])/df_geral_teste[A_relaxacao][n].max()  # Coloque seus valores de A(t) aqui
+    A_t = np.array(Dados[A_relaxacao][n])/Dados[A_relaxacao][n].max()  # Coloque seus valores de A(t) aqui
     
     # Realizar o ajuste usando curve_fit
     p0 = P0  # Valores iniciais para a e b
