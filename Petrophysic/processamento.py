@@ -15,7 +15,7 @@ import geopandas as gpd
 from shapely.geometry import Point  # Exemplo de geometria
 
 
-def ObtencaoDadosNiumagTeste(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Pontos_inversao,
+def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Pontos_inversao,
                         Relaxacao = False, Distribuicao = False, T2_niumag = False, Erro = False, Ruido = False,
                         T2_Amplitudes = False, Poco = False,
                         C_amostra = 9, N_poco_i = 4, N_poco_f = 0, N_amp = 3,
