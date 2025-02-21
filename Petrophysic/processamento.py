@@ -870,3 +870,45 @@ def DadosRidgeLine(Dataframe, N_t2 = 3, Cluster = False, Poco = False, N_poco = 
                               
     
   return df
+
+
+def InversaoThikonov(Dataframe, N_amostra = 0, N_amplitudes = Nom_amplitudes, N_Tempo = Nom_Tempo,
+                     T2_min = T2_minimo, T2_max = T2_maximo, T2_ran = T2_range, Lamb = Regularizador):
+                       
+        t = Dataframe[N_Tempo][N_amostra].astype(float)
+        a = df[N_amplitudes][N_amostra].astype(float)
+
+        # Definindo os limites e a faixa de T2
+        t2min = T2_min
+        t2max = T2_max
+        t2range = T2_ran  # número de bins de T2
+        T = np.linspace(np.log10(t2min), np.log10(t2max), t2range)
+        T2 = [pow(10, i) for i in T]
+        x, y = np.meshgrid(t, T2)
+
+        # Matriz de modelo
+        X = np.exp(-x/y).T
+        Y = np.array(a)
+
+        # Definindo o parâmetro de regularização
+        regularzador = Lamb
+        n_variables = X.shape[1]
+
+        # Matriz regularizada (Tikhonov)
+        ATA = np.dot(X.T, X) + regularzador * np.eye(n_variables)
+        ATb = np.dot(X.T, Y)
+
+        # Resolvendo o sistema regularizado
+        amplitude = np.linalg.solve(ATA, ATb)
+
+        # Função de erro (mínimos quadrados regularizados)
+        def FuncaoCusto(a):
+            return np.linalg.norm(X @ a - Y) ** 2 + regularzador * np.linalg.norm(a) ** 2
+
+        # Resolvendo a minimização com restrição de não negatividade
+        res = minimize(FuncaoCusto, np.zeros(n_variables), bounds=[(0, None)] * n_variables)
+
+        # Amplitude final
+        amplitude = res.x
+
+        return amplitude
