@@ -19,8 +19,9 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
                         Relaxacao = False, Distribuicao = False, T2_niumag = False, Erro = False, Ruido = False,
                         T2_Amplitudes = False, Poco = False,
                         C_amostra = 9, N_poco_i = 4, N_poco_f = 0, N_amp = 3,
-                        Inversao_Thikonov = False, Inversao_AntonnTalankin = False, Nom_amplitudes = 'Picos Amplitudes', Nom_Tempo = 'Tempo Relaxacao',
-                        T2_minimo = 0.01, T2_maximo = 10000, T2_range = 128, Regularizador = 0.1):
+                        Inversao_Thikonov = False, Inversao_AntonnTalankin = False, Inversao_ThikonovSuavizada = False,
+                        Nom_amplitudes = 'Picos Relaxacao', Nom_Tempo = 'Tempo Relaxacao',
+                        T2_minimo = 0.01, T2_maximo = 10000, T2_range = 128, Regularizador = 0.1, Suavizador = 0.1):
 
 
     """
@@ -180,15 +181,18 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
         # Amplitude final
         amplitude = res.x
 
-        return amplitude
+        return amplitude, T2
 
       inversao_t = []
+      tempo_t = []
 
       for i in np.arange(len(df['Amostra'])):
-          a_niumag = InversaoThikonov(df, N_amostra = i, N_amplitudes = 'Picos Relaxacao', N_Tempo = 'Tempo Relaxacao')
-          inversao_t.append(a_niumag)
+          a_thikonov, t_thikonov = InversaoThikonov(df, N_amostra = i, N_amplitudes = Nom_amplitudes, N_Tempo = Nom_Tempo)
+          inversao_t.append(a_thikonov)
+          tempo_t.append(t_thikonov)
 
       df['Inversao Thikonov'] = inversao_t
+      df['Distribuicao T2 Thikonov'] = tempo_t
     
     if Inversao_AntonnTalankin == True:
       def Inversao_AntonnTalankin(Dataframe, N_amostra = 0, N_amplitudes = Nom_amplitudes, N_Tempo = Nom_Tempo,
@@ -212,14 +216,83 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
         B = concatenate([Y, np.zeros(n_variables)])
         A1=nnls(A,B)
         amplitude=A1[0]
-        return amplitude
+        return amplitude, T2
 
       amplitude_a = []
+      tempo_a = []
+
       for i in np.arange(len(df['Amostra'])):
-        a_niumag = Inversao_AntonnTalankin(df, N_amostra = i, N_amplitudes = 'Picos Relaxacao', N_Tempo = 'Tempo Relaxacao')
-        amplitude_a.append(a_niumag)
+        a_antonn, t_antonn = Inversao_AntonnTalankin(df, N_amostra = i, N_amplitudes = Nom_amplitudes, N_Tempo = Nom_Tempo)
+        amplitude_a.append(a_antonn)
+        tempo_a.append(t_antonn)
 
       df['Inversao Antonn Talankin'] = amplitude_a
+      df['Distribuicao T2 Antonn Talankin'] = tempo_a
+
+    
+    if Inversao_ThikonovSuavizada == True:
+      def InversaoThikonovSuavizada(Dataframe, N_amostra=0, N_amplitudes='Picos Amplitudes', N_Tempo='Tempo Relaxacao',
+                                    T2_minimo = 0.01, T2_maximo = 10000, T2_range = 128, Lamb = Regularizador, Suavizacao = Suavizador):
+        t = Dataframe[N_Tempo][N_amostra].astype(float)
+        a = Dataframe[N_amplitudes][N_amostra].astype(float)
+
+        # Definindo os limites e a faixa de T2
+        t2min = T2_minimo
+        t2max = T2_maximo
+        t2range = T2_range
+        T = np.linspace(np.log10(t2min), np.log10(t2max), t2range)
+        T2 = [10 ** i for i in T]
+        x, y = np.meshgrid(t, T2)
+
+        # Matriz de modelo
+        X = np.exp(-x / y).T
+        Y = np.array(a)
+
+        # Parâmetros de regularização
+        lambd = Regularizador
+        beta = Suavizacao  # Peso da suavização
+
+        # Criando matriz de segunda diferença (suavização)
+        n_variables = X.shape[1]
+        D = np.zeros((n_variables - 2, n_variables))  # Matriz para diferenças segundas
+
+        for j in range(n_variables - 2):
+            D[j, j] = 1
+            D[j, j + 1] = -2
+            D[j, j + 2] = 1
+
+        # Construindo a matriz do sistema regularizado
+        ATA = np.dot(X.T, X) + lambd * np.eye(n_variables) + beta * np.dot(D.T, D)
+        ATb = np.dot(X.T, Y)
+
+        # Resolvendo o sistema linear regularizado
+        amplitude = np.linalg.solve(ATA, ATb)
+
+        # Função de custo para minimização
+        def FuncaoCusto(a):
+            erro = np.linalg.norm(X @ a - Y) ** 2
+            reg = lambd * np.linalg.norm(a) ** 2
+            suav = beta * np.linalg.norm(D @ a) ** 2
+            return erro + reg + suav
+
+        # Resolvendo minimização com restrição de não negatividade
+        res = minimize(FuncaoCusto, np.zeros(n_variables), bounds=[(0, None)] * n_variables)
+
+        # Amplitude final
+        amplitude = res.x
+
+        return amplitude, T2
+
+      amplitude_ts = []
+      tempo_ts = []
+
+      for i in np.arange(len(df['Amostra'])):
+        a_ThiSua, t_ThiSua = InversaoThikonovSuavizada(df, N_amostra = i, N_amplitudes = Nom_amplitudes, N_Tempo = Nom_Tempo)
+        amplitude_ts.append(a_ThiSua)
+        tempo_ts.append(t_ThiSua)
+
+      df['Inversao Thikonov Suave'] = amplitude_ts
+      df['Distribuicao T2 Thikonov Suave'] = tempo_ts
 
     if T2_niumag == True:
       df['T2 Geometrico Niumag'] = t2gm_niumag
