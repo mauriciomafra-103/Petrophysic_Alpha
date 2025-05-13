@@ -10,7 +10,7 @@ from numpy import concatenate
 from sklearn import preprocessing
 from sklearn.preprocessing import MaxAbsScaler, OneHotEncoder
 from sklearn.metrics import mean_squared_error
-from scipy.optimize import nnls
+from scipy.optimize import nnls, minimize
 
 # Bibliotecas para georeferenciamento
 import geopandas as gpd
