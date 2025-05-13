@@ -4,6 +4,7 @@ import openpyxl
 # Bibliotecas para leitura e processamentos dos dados
 import pandas as pd
 import numpy as np
+from numpy import concatenate
 
 # Bibliotecas para Processamento RMN
 from sklearn import preprocessing
