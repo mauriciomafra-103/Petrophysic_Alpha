@@ -49,19 +49,21 @@ def VisualizarPredicoesPermeabilidade (Dados, modelo_previsao, Pasta_Salvamento 
 
 
 def VisualizarPorosidade(Dados, Pasta_Salvamento = None, Modelo = None,
-                          Litofacies = None, Salvar = False, Erro = False):
-    titulo = f'Gas porosity adjustment with NMR\n to the {Modelo}'                                        # Nomes do Gráfico
-    eixo_x = 'Gas Porosity (%)'
-    eixo_y = 'NMR Porosity (%)'
+                              N_x = 'Porosidade Gas', N_y = 'Porosidade RMN', porcentagem = 1, N_r = 60,
+                              L_x = 'Gas Porosity (%)', L_y = 'NMR Porosity (%)', L_t = f'Gas porosity adjustment with NMR\n to the {Modelo}'
+                              Hue = None, Litofacies = None, Salvar = False, Erro = False, densidade = 1200):
+    titulo = L_t                                        # Nomes do Gráfico
+    eixo_x = L_x
+    eixo_y = L_y
     legenda = ['Expected outcome', 'NMR Porosity']
 
 
-    reta = pd.DataFrame({'x' : np.arange(40),                                             # Determinando Reta de ajuste
-                         'y' : np.arange(40)})
+    reta = pd.DataFrame({'x' : np.arange(N_r),                                             # Determinando Reta de ajuste
+                         'y' : np.arange(N_r)})
 
-    sns.scatterplot(x = Dados['Porosidade Gas']*100,
-                    y = Dados['Porosidade RMN']*100,
-                    hue = Dados['Litofacies'],
+    sns.scatterplot(x = Dados[N_x]*porcentagem,
+                    y = Dados[N_y]*porcentagem,
+                    hue = Hue,
                     palette = 'Set1')
 
     sns.lineplot(data = reta,
@@ -69,23 +71,15 @@ def VisualizarPorosidade(Dados, Pasta_Salvamento = None, Modelo = None,
                 y = 'y')
 
     if Erro == True:
-      valor_erro = mean_squared_error(Dados['Porosidade Gas']*100, Dados['Porosidade RMN']*100)
+      valor_erro = np.sqrt(mean_squared_error(Dados[N_x]*porcentagem, Dados[N_y]*porcentagem))
       plt.plot(reta['x'], reta['y'] + valor_erro, "b-.", linewidth=1)
       plt.plot(reta['x'], reta['y'] - valor_erro, "b-.", linewidth=1, label = f'+/- \u03B5: {valor_erro:.2f}')
       plt.legend(loc="upper left", fontsize=10)
 
     plt.xlabel(eixo_x)                                                                 # Determinando os nomes
     plt.ylabel(eixo_y)
-    plt.xlim(0, 35)
-    plt.ylim(0, 35)
-
-
-
-
-    if Salvar == True:
-        plt.savefig(Pasta_Salvamento + titulo + '.png', format='png')
-
-    plt.show()
+    plt.xlim(0, N_r)
+    plt.ylim(0, N_r)
 
 
 def VisualizarPoroPer(Dados, Modelo, Pasta_Salvamento = None):
