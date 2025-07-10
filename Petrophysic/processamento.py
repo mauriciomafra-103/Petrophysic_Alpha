@@ -946,6 +946,7 @@ def DadosRidgeLine(Dataframe, N_t2 = 3, Cluster = False, Poco = False, N_poco = 
     
   return df
 
+##################################################################################  Próxima Função  ##################################################################################
 
 def InversaoThikonov(Dataframe, N_amostra = 0, N_amplitudes = 'Picos Amplitudes', N_Tempo = 'Tempo Relaxacao',
                      T2_min = 0.01, T2_max = 10000, T2_ran = 128, Lamb = 0.1):
@@ -987,3 +988,83 @@ def InversaoThikonov(Dataframe, N_amostra = 0, N_amplitudes = 'Picos Amplitudes'
         amplitude = res.x
 
         return amplitude
+
+##################################################################################  Próxima Função  ##################################################################################
+
+def AnaliseOndaAVS(diretorio = '/content/', arquivo = 'amostra.xlsx', sheet = 'PO_PO', N = 2,
+                massa = 57e-3, raio = 1.24e-2, fft_suave = False, fator_suavizacao = 1000):
+  df = pd.read_excel(diretorio + arquivo, sheet_name = sheet)
+  t_max = df['Time (us)'].max()
+  t_min = df['Time (us)'].min()
+  t_pas = (t_max-t_min)/(len(df['Time (us)']))
+  tempo = np.arange(t_min, t_max, t_pas)[::N]
+  amplitude = df['AWT'][::N]-100
+
+  # FFT da Onda
+  N_o = len(amplitude)
+  dt = np.mean(np.diff(tempo))                                                    # Intervalo médio de amostragem (us)
+  fs = 1 / dt                                                                     # Frequência de amostragem (MHz)
+
+  awt_fft = np.fft.fft(amplitude)
+  freqs = np.fft.fftfreq(N_o, d = dt)
+
+  # Apenas a metade positiva das frequências
+  idx = freqs >= 0
+  freqs_pos = freqs[idx]
+  FFT_amplitude = np.abs(awt_fft)[idx]
+
+  fase = np.angle(awt_fft[np.argmax(FFT_amplitude)])                              # fase em radianos
+  tempo_delta = df['Unnamed: 3'][3]/1e3
+  tamanho_amostra = df['Unnamed: 12'][2]
+  velocidade = tamanho_amostra/tempo_delta
+  volume = np.pi*tamanho_amostra*raio**2
+  densidade = massa/volume
+  
+
+  df = pd.DataFrame({'Amplitude AVS': amplitude,
+                     'Tempo AVS': tempo}).reset_index(drop=True)
+
+  FFT = pd.DataFrame({'Frequência': freqs_pos,
+                     'Amplitude Frequencia': FFT_amplitude})
+  
+  amplitude_max = FFT_amplitude.max()
+  indice_max = FFT['Amplitude Frequencia'].idxmax()
+  frequencia_max = freqs_pos[indice_max]*1e6
+
+  dados = pd.Series({'Fase': fase,
+                     'Tempo de Trânsito': tempo_delta,
+                     'Tamanho da Amostra': tamanho_amostra,
+                     'Velocidade da Onda': velocidade,
+                     'Massa': massa,
+                     'Raio': raio,
+                     'Volume': volume,
+                     'Densidade': densidade,
+                     'Amplitude Maxima': amplitude_max,
+                     'Frequencia Amplitude': frequencia_max})
+  
+  if fft_suave == True:
+    freqs_dense = np.linspace(freqs_pos.min(), freqs_pos.max(), fator_suavizacao)
+    spline = make_interp_spline(freqs_pos, FFT_amplitude)
+    amplitude_suave = spline(freqs_dense)
+    FFT_suave = pd.DataFrame({'Frequência': freqs_dense,
+                              'Amplitude Frequencia': amplitude_suave})
+
+    return df, FFT, dados, FFT_suave
+  
+  else:     
+
+    return df, FFT, dados
+
+##################################################################################  Próxima Função  ##################################################################################
+
+def FatorQ (resultado_t, resultado_r):
+  fator_q = np.pi * resultado_r['Frequencia Amplitude'] / (
+      
+      resultado_r['Velocidade da Onda'] * np.log(resultado_t['Amplitude Maxima'] / resultado_r['Amplitude Maxima']
+      
+                                               ) / resultado_r['Tamanho da Amostra'])
+  resultado_r['Amplitude Maxima Entrada'] = resultado_t['Amplitude Maxima']
+  resultado_r['Fator Q'] = fator_q
+  return resultado_r
+
+##################################################################################  Próxima Função  ##################################################################################
