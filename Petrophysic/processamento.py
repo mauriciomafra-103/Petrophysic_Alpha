@@ -321,14 +321,15 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
 ##################################################################################  Próxima Função  ##################################################################################
 
 def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_pagina = "Dados",
-                            Porosidade_i = False, poro_i = 'Porosidade RMN', T2_log = False, Componentes_t2 = False,
-                            Fator_Cimentacao = False, V_artifical = 1.3, V_geral = 2.0,
-                            Fracoes_T2Han = False, Fracoes_T2Ge = False, Localizacao = False,
-                            Parametros_lab = ['Amostra', 'Permeabilidade Gas', 'Porosidade Gas', 'Porosidade RMN'],
-                            Geometria = False, EPSG = 4326, Conversao = False, N_Conversao = 32724,
-                            BVIFFI = False, T_BVIFFI = 32.0, Fator_Formacao = False, Litofacie = False, 
-                            Fracoes_arg_cap_ffi = False, T_arg = 3.0, T_cap = 92.0,
-                            Dados_porosidade_Transverso = False, N_transverso = 128):
+                       N_tempo = 'Tempo Distribuicao', N_distribuicao = 'Distribuicao T2',
+                       Porosidade_i = False, poro_i = 'Porosidade RMN', T2_log = False, Componentes_t2 = False,
+                       Fator_Cimentacao = False, V_artifical = 1.3, V_geral = 2.0,
+                       Fracoes_T2Han = False, Fracoes_T2Ge = False, Localizacao = False,
+                       Parametros_lab = ['Amostra', 'Permeabilidade Gas', 'Porosidade Gas', 'Porosidade RMN'],
+                       Geometria = False, EPSG = 4326, Conversao = False, N_Conversao = 32724,
+                       BVIFFI = False, T_BVIFFI = 32.0, Fator_Formacao = False, Litofacie = False, 
+                       Fracoes_arg_cap_ffi = False, T_arg = 3.0, T_cap = 92.0,
+                       Dados_porosidade_Transverso = False, N_transverso = 128):
     """
     Esta função trata mesclar os dados já processados de RMN (como processado pela função anterior e que tenha informações da distribuição de tamanho de poros)
     com os dados laboratoriais, que contenham dados de porosidade a gás e de RMN, permeabilidade a gas, litofácies das amostras.
@@ -337,6 +338,8 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
         Diretorio_pasta (str): O caminho do diretório onde está o arquivo excel exportado pelo software Niumag.
         Arquivo_laboratorio (str): Nome do arquivo contendo os dados do laboratório em excel.
         Dados_niumag (pandas.DataFrame): DataFrame com as informações selecionadas da distribuição de tamanho de poros.
+        N_tempo (str): Nome da coluna que será utilizada para análise do tempo de distribuição.
+        N_distribuicao (str): Nome da coluna que será utilizada para análise da amplitude da distribuição.
         Porosidade_i (bool): Caso o usuário queira a transformação do sinal de RMN em porosidade RMN.
         poro_i (str): Nome da coluna com a porosidade que o usuário deseja normalizar o sinal de amplitude da RMN.
         T2_log (bool): Caso o usuário queira calcular o T2_lm proposto por Kenyon et al (1988). OBS: Não está pronto.
@@ -375,8 +378,8 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
     dados_lab['Amostra'] = dados_lab['Amostra'].astype(str)
     dados_lab = dados_lab.sort_values(by = 'Amostra').reset_index(drop = True)
 
-    tempo_distribuicao = dados_niumag['Tempo Distribuicao']
-    distribuicao_t2 = dados_niumag['Distribuicao T2']
+    tempo_distribuicao = dados_niumag[N_tempo]
+    distribuicao_t2 = dados_niumag[N_distribuicao]
 
     porosi_i = []
     media_ponderada_log = []
