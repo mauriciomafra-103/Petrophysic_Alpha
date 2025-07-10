@@ -53,9 +53,9 @@ def VisualizarPredicoesPermeabilidade (Dados, modelo_previsao, Pasta_Salvamento 
 
 def VisualizarPorosidade(Dados, Pasta_Salvamento = None, Modelo = None,
                               N_x = 'Porosidade Gas', N_y = 'Porosidade RMN', porcentagem = 1, N_r = 60,
-                              L_x = 'Gas Porosity (%)', L_y = 'NMR Porosity (%)', L_t = f'Gas porosity adjustment with NMR\n to the {Modelo}'
+                              L_x = 'Gas Porosity (%)', L_y = 'NMR Porosity (%)', L_t = 'Gas porosity adjustment with NMR\n to the {Modelo}'
                               Hue = None, Litofacies = None, Salvar = False, Erro = False, densidade = 1200):
-    titulo = L_t                                        # Nomes do Gráfico
+    titulo = L_t                                      # Nomes do Gráfico
     eixo_x = L_x
     eixo_y = L_y
     legenda = ['Expected outcome', 'NMR Porosity']
