@@ -323,8 +323,9 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
 def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_pagina = "Dados",
                        N_tempo = 'Tempo Distribuicao', N_distribuicao = 'Distribuicao T2',
                        Porosidade_i = False, poro_i = 'Porosidade RMN', T2_log = False, Componentes_t2 = False,
-                       K_Kenyon = False, Coef_Kenyon_a = 0.01, Coef_Kenyon_b = 4, Coef_Kenyon_c = 2,
-                       Fator_Cimentacao = False, V_artifical = 1.3, V_geral = 2.0,
+                       K_Kenyon = False, Coef_Kenyon_a = 0.01, Coef_Kenyon_b = 2, Coef_Kenyon_c = 4, fracao = 100,
+                       N_T2 = 'T2 Ponderado Log', N_phi = 'Porosidade RMN',
+                       Conversao_garganta = False, Fator_Cimentacao = False, V_artifical = 1.3, V_geral = 2.0,
                        Fracoes_T2Han = False, Fracoes_T2Ge = False, Localizacao = False,
                        Parametros_lab = ['Amostra', 'Permeabilidade Gas', 'Porosidade Gas', 'Porosidade RMN'],
                        Geometria = False, EPSG = 4326, Conversao = False, N_Conversao = 32724,
@@ -343,11 +344,12 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
         N_distribuicao (str): Nome da coluna que será utilizada para análise da amplitude da distribuição.
         Porosidade_i (bool): Caso o usuário queira a transformação do sinal de RMN em porosidade RMN.
         poro_i (str): Nome da coluna com a porosidade que o usuário deseja normalizar o sinal de amplitude da RMN.
-        T2_log (bool): Caso o usuário queira calcular o T2_lm proposto por Kenyon et al (1988).
+        T2_log (bool): Caso o usuário queira calcular o T2_lm proposto por Kenyon et al (1988). OBS: Não está pronto.
         K_Kenyon (bool): Cálculo da Permeabilidade Pelo método de Kenyon com valores dos expodentes informados. Obs: Em desenvolvimento.
         Coef_Kenyon_a (float): Coeficiente a do modelo Kenyon.
-        Coef_Kenyon_b (float): Coeficiente a do modelo Kenyon.
-        Coef_Kenyon_c (float): Coeficiente c do modelo Kenyon.
+        Coef_Kenyon_b (float): Coeficiente b do T2_log do modelo Kenyon.
+        Coef_Kenyon_c (float): Coeficiente c da Porosidade do modelo Kenyon.
+        Conversao_garganta (bool): Conversão do tempo para garganta de poro seguindo o artigo de Han et al. (2018). Obs: Em desenvolvimento.
         Componentes_t2 (bool): Caso o usuário tenha as componentes que ajustam a curva de relaxação T2.
         Fator_Cimentacao (bool): Caso o usuário queira obter o fator de cimentação.
         V_artifical (int): Fator de cimentação das amostras artificiais.
@@ -378,13 +380,14 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
         essa função retornará os dados mesclados e prontos para regressões ou visualizações no formato pandas.DataFrame.
     """
 
-    dados_niumag = Dados_niumag
+    dados_niumag = Dados_niumag.sort_values(by = 'Amostra')
     dados_lab = pd.read_excel(Diretorio_pasta + Arquivo_laboratorio, sheet_name = Nome_pagina)
     dados_lab['Amostra'] = dados_lab['Amostra'].astype(str)
     dados_lab = dados_lab.sort_values(by = 'Amostra').reset_index(drop = True)
 
     tempo_distribuicao = dados_niumag[N_tempo]
     distribuicao_t2 = dados_niumag[N_distribuicao]
+
 
     porosi_i = []
     media_ponderada_log = []
@@ -403,9 +406,11 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
     argila = []
     capilar = []
     ffi_cap = []
+    k_Kenyon = []
+    r_garganta = []
 
     df_niumag_sa = dados_niumag.drop('Amostra', axis = 1)
-    df = pd.concat([dados_lab[Parametros_lab], df_niumag_sa, ], axis = 1)
+    df = pd.concat([dados_lab[Parametros_lab], df_niumag_sa], axis = 1)
 
     if Litofacie == True:
       codi_lab = preprocessing.LabelEncoder()
@@ -445,11 +450,8 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
               p = float(sc[j]*scaler_sum_phi)
               phi_i.append(p)
           porosi_i.append(list(phi_i))
-    # Criação de uma lista de valores com distribuição de porosidade
-
-    if Porosidade_i == True:
       df['Porosidade_i'] = porosi_i
-      # Criação da coluna com a porosidade
+    # Criação de uma lista de valores com distribuição de porosidade
 
     if T2_log == True:
       for i in np.arange(len(porosi_i)):
@@ -462,13 +464,35 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
         media_ponderada_log.append((razao_t2))
     # Calculando o T2_log usado na função do Kenyon et al (1988)
       df["T2 Ponderado Log"] = media_ponderada_log
-                              
+    
+    if K_Kenyon == True:
+      for i in np.arange(len(df[N_T2])):
+        t2 = df[N_T2][i]
+        phi = df[N_phi][i]/fracao
+        k = Coef_Kenyon_a * (
+          t2 ** Coef_Kenyon_b
+          ) * (
+          phi ** Coef_Kenyon_c             
+            )
+        k_Kenyon.append(k)
+      df['Permeabilidade SDR'] = k_Kenyon
+
+    if Conversao_garganta == True:
+      for i in np.arange(len(porosi_i)):
+        indices_micro = np.where(tempo_distribuicao[i] <= 30)[0]
+        f_micro = indices_micro[-1]
+        r_1 = 0.033*(tempo_distribuicao[i][:f_micro]**0.372)
+        r_2 = 0.0003*(tempo_distribuicao[i][f_micro:]**1.84)
+        r_total = np.concatenate([r_1, r_2])
+        r_garganta.append(r_total)
+
+      df['Raio Garganta'] = r_garganta
+
     if Componentes_t2 == True:
       df = pd.concat([df, dados_lab[['A_NMR', 'T2_NMR',
                                      'A1', 'T21',
                                      'A2', 'T22',
                                      'A3', 'T23']]], axis = 1)
-    # Unificação dos dados com as componentes T2
 
     if Fator_Cimentacao == True:
       def DefinirValor(litofacies):
