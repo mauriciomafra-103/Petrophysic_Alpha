@@ -14,6 +14,8 @@ def erro_sigma(previsao, gas):
     sigma = 10**(raiz)
     return sigma
 
+#############################################################################################################
+
 def VisualizarPredicoesPermeabilidade (Dados, modelo_previsao, Pasta_Salvamento = None, Data= None, Modelo = None,
                           Litofacies = None, Salvar = False, Sigma = False, Valor_Sigma = 3.64):
     eixo_x = 'Gas Permeability (mD)'
@@ -47,6 +49,7 @@ def VisualizarPredicoesPermeabilidade (Dados, modelo_previsao, Pasta_Salvamento 
         plt.savefig(Pasta_Salvamento + Data + titulo + '.png', format='png')
     plt.show()
 
+#############################################################################################################
 
 def VisualizarPorosidade(Dados, Pasta_Salvamento = None, Modelo = None,
                               N_x = 'Porosidade Gas', N_y = 'Porosidade RMN', porcentagem = 1, N_r = 60,
@@ -81,6 +84,7 @@ def VisualizarPorosidade(Dados, Pasta_Salvamento = None, Modelo = None,
     plt.xlim(0, N_r)
     plt.ylim(0, N_r)
 
+#############################################################################################################
 
 def VisualizarPoroPer(Dados, Modelo, Pasta_Salvamento = None):
     eixo_x = 'Porosity (%)'
@@ -99,6 +103,7 @@ def VisualizarPoroPer(Dados, Modelo, Pasta_Salvamento = None):
     plt.yscale('log')
     plt.show()
 
+#############################################################################################################
 
 def HistogramaPermeabilidade(Dados, permeabilidade):
   sns.histplot(data = Dados, x = permeabilidade, kde=True, bins = 32,
@@ -109,6 +114,7 @@ def HistogramaPermeabilidade(Dados, permeabilidade):
   plt.xlim(0.001, 1000)
   plt.show()
 
+#############################################################################################################
 
 def VisualizarDistribuicaoT2 (Dados, CBW = False, Anotacao = False, Salvar = False, N_porosidade = 'Porosidade_i',
                               N_distribuicao = 'Tempo Distribuicao', N_amostra = 'Amostra',
@@ -193,7 +199,7 @@ def VisualizarDistribuicaoT2 (Dados, CBW = False, Anotacao = False, Salvar = Fal
             ax2.text(300,y2[30]/2, 'FFI', fontsize = 12)
             ax2.fill_between(x2, y2, where = (x1 >= V_capilar) & (x1 <= 10000), alpha = 0.3, color = 'green')
 
-
+#############################################################################################################
 
 def VisualizarRQI(dados, regressao, phi, rqi, modelo, ylim = [0.001, 10], xlim = [0.01, 1]):
   eixo_x = 'φz'
@@ -262,6 +268,7 @@ def VisualizarSigmoid(dados, modelo):
   plt.ylim(0, 2)
   plt.show()
 
+#############################################################################################################
 
 def VisualizarRidgeLinePermeabilidade(dados_totais, dados_ridge, permeabilidade_rf, permeabilidade_gb, permeabilidade_mlp, permeabilidade_sdr, permeabilidade_han, modelo):
     for i in np.arange(len(dados_ridge['Poço'].unique())):
@@ -441,6 +448,8 @@ def VisualizarRidgeLinePermeabilidade(dados_totais, dados_ridge, permeabilidade_
         plt.savefig(f'/content/sample_data/Teste-{poço}.png', format='png', dpi = 300)
         plt.show()
 
+#############################################################################################################
+
 def VisualizarContornoSESPI(DataFrame_SESPI):
       # Dados fornecidos
       posicao = pd.Series(DataFrame_SESPI.drop('Time(ms)', axis = 1).columns)
@@ -495,3 +504,28 @@ def VisualizarContornoSESPI(DataFrame_SESPI):
     
       plt.tight_layout()
       plt.show()
+
+
+
+#############################################################################################################
+
+def VisualizarSinalAVS(dados_t, dados_r, Title = "Sinal de Entrada e Saída da Amostra XXX"):
+  sns.lineplot(data = dados_t, x = 'Tempo AVS', y = 'Amplitude AVS', label='Onda de Entrada')
+  sns.lineplot(data = dados_r, x = 'Tempo AVS', y = 'Amplitude AVS', label='Onda de Saída')
+  plt.title(Title)
+  plt.xlabel("Tempo (us)")
+  plt.ylabel("Amplitude do Sinal")
+  plt.grid(True)
+
+#############################################################################################################
+
+def VisualizarFFTAVS(fft_t, fft_r, Title = "Sinal de Entrada e Saída da Amostra XXX", limite = [0,5]):
+  sns.lineplot(data = fft_t, x = 'Frequência', y = 'Amplitude Frequencia', label='FFT Entrada')
+  sns.lineplot(data = fft_r, x = 'Frequência', y = 'Amplitude Frequencia', label='FFT Saída')
+  plt.title(Title)
+  plt.xlabel("Frequência (MHz)")
+  plt.ylabel("Amplitude")
+  plt.grid(True)
+  plt.xlim(limite)
+  plt.show()
+
