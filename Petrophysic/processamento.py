@@ -323,6 +323,7 @@ def ObtencaoDadosNiumag(Diretorio_pasta, Arquivo_niumag, Inicio_conversao, Ponto
 def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_pagina = "Dados",
                        N_tempo = 'Tempo Distribuicao', N_distribuicao = 'Distribuicao T2',
                        Porosidade_i = False, poro_i = 'Porosidade RMN', T2_log = False, Componentes_t2 = False,
+                       K_Kenyon = False, Coef_Kenyon_a = 0.01, Coef_Kenyon_b = 4, Coef_Kenyon_c = 2,
                        Fator_Cimentacao = False, V_artifical = 1.3, V_geral = 2.0,
                        Fracoes_T2Han = False, Fracoes_T2Ge = False, Localizacao = False,
                        Parametros_lab = ['Amostra', 'Permeabilidade Gas', 'Porosidade Gas', 'Porosidade RMN'],
@@ -342,7 +343,11 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
         N_distribuicao (str): Nome da coluna que será utilizada para análise da amplitude da distribuição.
         Porosidade_i (bool): Caso o usuário queira a transformação do sinal de RMN em porosidade RMN.
         poro_i (str): Nome da coluna com a porosidade que o usuário deseja normalizar o sinal de amplitude da RMN.
-        T2_log (bool): Caso o usuário queira calcular o T2_lm proposto por Kenyon et al (1988). OBS: Não está pronto.
+        T2_log (bool): Caso o usuário queira calcular o T2_lm proposto por Kenyon et al (1988).
+        K_Kenyon (bool): Cálculo da Permeabilidade Pelo método de Kenyon com valores dos expodentes informados. Obs: Em desenvolvimento.
+        Coef_Kenyon_a (float): Coeficiente a do modelo Kenyon.
+        Coef_Kenyon_b (float): Coeficiente a do modelo Kenyon.
+        Coef_Kenyon_c (float): Coeficiente c do modelo Kenyon.
         Componentes_t2 (bool): Caso o usuário tenha as componentes que ajustam a curva de relaxação T2.
         Fator_Cimentacao (bool): Caso o usuário queira obter o fator de cimentação.
         V_artifical (int): Fator de cimentação das amostras artificiais.
@@ -456,7 +461,7 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
         razao_t2 = float(np.exp(sum_num/sum_den))
         media_ponderada_log.append((razao_t2))
     # Calculando o T2_log usado na função do Kenyon et al (1988)
-    df["T2 Ponderado Log"] = media_ponderada_log
+      df["T2 Ponderado Log"] = media_ponderada_log
                               
     if Componentes_t2 == True:
       df = pd.concat([df, dados_lab[['A_NMR', 'T2_NMR',
