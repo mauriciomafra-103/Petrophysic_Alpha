@@ -61,7 +61,88 @@ def RegressaoSDR (Dataframe_SDR,
 
     return reg_ols_log, coeficientes, pd.concat([Dataframe_SDR, dados], axis = 1), sigma
 
+##################################################################################  Próxima Função  ##################################################################################
 
+def RegressaoTimurCoatesOriginal(Dataframe_Coates,
+                                     BVI='BVI', FFI='FFI', N_porosidade='Porosidade RMN',
+                                     N_Permeabilidade='Permeabilidade Gas'):
+    """
+    Regressão dos coeficientes da modelagem Timur-Coates com a forma log(k) = ab*log(φ_NMR/C) + b*log(FFI/BVI).
+
+    Args:
+        Dataframe_Coates (pandas.DataFrame): DataFrame com os dados necessários para modelagem.
+        BVI (str): Nome da coluna BVI.
+        FFI (str): Nome da coluna FFI.
+        N_porosidade (str): Nome da coluna de Porosidade RMN.
+        N_Permeabilidade (str): Nome da coluna de Permeabilidade.
+        C (float): Constante C utilizada na equação.
+
+    Returns:
+        reg_ols_log: Objeto da regressão.
+        coeficientes: DataFrame com os coeficientes estimados.
+        DataFrame com dados previstos.
+        sigma: erro padrão.
+    """
+    # Preparo das variáveis
+    FFIBVI = Dataframe_Coates[FFI] / Dataframe_Coates[BVI]
+    permeabilidade = Dataframe_Coates[N_Permeabilidade]
+    porosidade = Dataframe_Coates[N_porosidade]
+
+    X_c = np.power(permeabilidade/porosidade, 0.25)
+    Y_c = np.power(FFIBVI, 0.5)
+    X_matrix = sm.add_constant(X_c)
+    modelo_C = sm.OLS(Y_c, X_c).fit()
+
+    C = modelo_C.params[0]
+    phi = Dataframe_Coates[N_porosidade] / C
+    # Construção das variáveis para regressão
+    X1 = np.log(phi)
+    X2 = np.log(FFIBVI)
+    Y = np.log(permeabilidade)
+
+    # DataFrame com as variáveis
+    dados_calculo = pd.DataFrame({'Log k': Y,
+                                  'Log (phi/C)': X1,
+                                  'Log (FFI/BVI)': X2})
+
+    # Atributos e rótulo
+    atributos = dados_calculo[['Log (phi/C)', 'Log (FFI/BVI)']]
+    rotulo = dados_calculo['Log k']
+
+    # Regressão OLS
+    reg_ols_log = sm.OLS(rotulo, atributos).fit()
+
+    # Coeficientes da regressão: const, ab, b
+    ab = reg_ols_log.params[0]
+    b = reg_ols_log.params[1]
+
+    # Cálculo de 'a'
+    if b != 0:
+        a = ab / b
+    else:
+        a = np.nan  # evitar divisão por zero
+
+    # DataFrame com coeficientes
+    coeficientes = pd.DataFrame({
+        'Coeficiente': ['ab', 'a', 'b', 'C', 'R2'],
+        'Valor': [ab, a, b, C, reg_ols_log.rsquared]
+    }).set_index('Coeficiente')
+
+    # Previsão da permeabilidade usando o modelo
+    k_previsto = ((phi ** (a)) * (FFIBVI)) ** b
+    dados_previstos = pd.DataFrame({'Permeabilidade Prevista Timur-Coates Original': k_previsto})
+
+    # Cálculo do erro sigma
+    k_p = np.log10(k_previsto)
+    k_g = np.log10(permeabilidade)
+    N = len(k_p)
+    soma = np.sum((k_p - k_g) ** 2)
+    raiz = np.sqrt(soma / N)
+    sigma = 10 ** raiz
+
+    return reg_ols_log, coeficientes, pd.concat([Dataframe_Coates, dados_previstos], axis=1), sigma
+
+##################################################################################  Próxima Função  ##################################################################################
 
 def RegressaoTimurCoates (Dataframe_Coates,
                      BVI = 'BVI', FFI = 'FFI', N_porosidade = 'Porosidade RMN',
@@ -115,7 +196,7 @@ def RegressaoTimurCoates (Dataframe_Coates,
 
     return reg_ols_log, coeficientes, pd.concat([Dataframe_Coates, dados], axis = 1), sigma
 
-
+##################################################################################  Próxima Função  ##################################################################################
 
 def RegressaoHan (Dataframe_Han,
                            Amostra = 'Amostra', S1 = 'S1Han', S2 = 'S2Han', S3 = 'S3Han', S4 = 'S4Han',
@@ -185,6 +266,7 @@ def RegressaoHan (Dataframe_Han,
 
     return reg_ols_log, coeficientes_novo, pd.concat([Dataframe_Han, dados], axis = 1), sigma
 
+##################################################################################  Próxima Função  ##################################################################################
 
 def RegressaoGe (Dataframe_Ge,
                  Amostra = 'Amostra', S1 = 'S1Ge', S3 = 'S3Ge', S4 = 'S4Ge',
@@ -272,6 +354,7 @@ def RegressaoGe (Dataframe_Ge,
 
     return reg_ols_log, coeficientes_novo, pd.concat([Dataframe_Ge, dados], axis = 1), sigma
 
+##################################################################################  Próxima Função  ##################################################################################
 
 def RegressaoRios(dados_treino, dados_teste, N_permeabilidade = 'Permeabilidade Gas', Log = True, N_componentes = 6,
                   C_distribuicao = ['T2 0.01',  'T2 0.011',  'T2 0.012',  'T2 0.014',  'T2 0.015',  'T2 0.017',  'T2 0.019',  'T2 0.021',  'T2 0.024',
@@ -359,7 +442,7 @@ def RegressaoRios(dados_treino, dados_teste, N_permeabilidade = 'Permeabilidade 
                                 N_permeabilidade,
                                 'Permeabilidade Prevista Rios']], sigma_treino, sigma_teste
 
-
+##################################################################################  Próxima Função  ##################################################################################
 
 def RegressaoFZI(Dados, Modelos = ['SDR'], N_Cluster = 'Litofacies'):
     
@@ -402,7 +485,7 @@ def RegressaoFZI(Dados, Modelos = ['SDR'], N_Cluster = 'Litofacies'):
     df = pd.concat([Dados, c], axis = 1)
     return df
 
-
+##################################################################################  Próxima Função  ##################################################################################
 
 def RegressaoComponentesT2 (Dados, n = 0, P0 = (0.8, 0.01), Params_Init = [0.8, 0.001, 0.1, 0.01, 0.1, 0.1],
                             Chute = False, N_chute = 0,
@@ -512,3 +595,194 @@ def RegressaoComponentesT2 (Dados, n = 0, P0 = (0.8, 0.01), Params_Init = [0.8, 
     coef['R2_FC'] = r2_fc
 
     return coef
+
+##################################################################################  Próxima Função  ##################################################################################
+
+def AjusteComponentesT2Seevers(Dados, n=0, P0=(0.5, 0.5, 1, 1)):
+    """
+    Ajusta a função f(t) = A1 * exp(-t/3) + A2 * exp(-t/T2S)
+    para os dados de relaxação no índice n de um DataFrame.
+
+    Inclui normalização por A_t[0] e teste de qui-quadrado.
+
+    Parâmetros:
+        Dados: DataFrame com colunas 'Tempo Relaxacao', 'Amplitude Relaxacao', 'Amostra'
+        n: índice da amostra a ser ajustada
+        P0: chute inicial para [A1, A2, T2S]
+
+    Retorna:
+        coef: DataFrame com parâmetros ajustados, R² e resultado do teste qui-quadrado
+    """
+
+    # Extrai e normaliza os dados
+
+    time = np.array(Dados['Tempo Relaxacao'][n])
+    A_t = np.array(Dados['Picos Relaxacao Fitting'][n])
+    A_t = A_t / A_t[0]  # Normalização pelo valor inicial
+
+    # Define o modelo
+    def modelo(t, A1, A2, T2L, T2S):
+        return A1 * np.exp(-t/T2L) + A2 * np.exp(-t/T2S)
+
+    # Ajuste de parâmetros
+    params, _ = curve_fit(modelo, time, A_t, p0=P0, maxfev=10000)
+    A1_fit, A2_fit, T2L_fit, T2S_fit = params
+
+    # Valores previstos
+    A_pred = modelo(time, A1_fit, A2_fit, T2L_fit, T2S_fit)
+
+    # R²
+    r2 = r2_score(A_t, A_pred)
+
+    # Qui-quadrado
+    chi_square_statistic = np.sum((A_t - A_pred)**2 / A_pred)
+    degrees_of_freedom = len(A_t) - len(params)
+    critical_value = chi2.ppf(0.95, degrees_of_freedom)
+
+    if chi_square_statistic <= critical_value:
+        ajuste_aprovado = True
+        mensagem = "O ajuste do modelo é adequado."
+    else:
+        ajuste_aprovado = False
+        mensagem = "O ajuste do modelo não é adequado. Considere revisar os parâmetros iniciais."
+
+    print(mensagem)
+
+    # DataFrame de resultados
+    coef = pd.DataFrame({
+        'Amostra': [Dados['Amostra'][n]],
+        'A1': [A1_fit],
+        'A2': [A2_fit],
+        'T2S': [T2S_fit],
+        'T2L': [T2L_fit],
+        'R2': [r2],
+        'Qui2': [chi_square_statistic],
+        'Qui2_Critico': [critical_value],
+        'Ajuste_Adequado': [mensagem],
+        'Fração Bulk': [A1_fit * np.exp(-time/T2L_fit)],
+        'Fração Surface': [A2_fit * np.exp(-time/T2S_fit)],
+        'Aplitude ajustada': [A1_fit * np.exp(-time/T2L_fit) + A2_fit * np.exp(-time/T2S_fit)]
+    })
+
+    return coef
+
+##################################################################################  Próxima Função  ##################################################################################
+
+def RegressaoArns (Dados_Arns, N_Permeabilidade = 'Permeabilidade Gas', N_T2 = 'T2 Ponderado Log',
+                  N_FatorFormacao = 'Fator de Formacao'):
+  permeabilidade = Dados_Arns[N_Permeabilidade]
+  t2 = Dados_Arns[N_T2]
+  ff = Dados_Arns[N_FatorFormacao]
+  dados_calculo = pd.DataFrame({'Log T2': np.log(t2),
+                                'Log FF': np.log(ff),
+                                'Log k': np.log(permeabilidade)})
+  dados_calculo = sm.add_constant(dados_calculo)
+  atributos = dados_calculo[['const', 'Log T2', 'Log FF']]
+  rotulos = dados_calculo[['Log k']]
+  reg_Arns = sm.OLS(rotulos, atributos, hasconst=True).fit()
+
+  # Obtenção dos coeficientes da Regressão
+  coef_Arns = pd.DataFrame({
+              'Coeficiente': ['a', 'b', 'c', 'R2'],
+              'Valor': [np.exp(reg_Arns.params[0]),
+                        reg_Arns.params[1],
+                        reg_Arns.params[2],
+                        reg_Arns.rsquared]}).set_index('Coeficiente')
+
+  # Cálculo da Previsão com base nos coeficientes obtidos
+  a = coef_Arns['Valor']['a']
+  b = coef_Arns['Valor']['b']
+  c = coef_Arns['Valor']['c']
+  k = (a*(t2**b)*(ff**c))
+  dados = pd.DataFrame({'Permeabilidade Prevista Arns': k})
+
+  #Erro Sigma
+  k_p = np.log10(dados['Permeabilidade Prevista Arns'])
+  k_g = np.log10(permeabilidade)
+  N = len(k_p)
+  soma = np.sum((k_p-k_g)**2)
+  raiz = np.sqrt(soma/N)
+  sigma_Arns = 10**(raiz)
+
+  return reg_Arns, coef_Arns, pd.concat([Dados_Arns, dados], axis = 1), sigma_Arns
+
+##################################################################################  Próxima Função  ##################################################################################
+
+def RegressaoParchekhari (Dataframe_Parchekhari, Params = [0, 0, 0, 0, 0, 0],
+                          N_Permeabilidade = 'Permeabilidade Gas', N_T2 = 'T2 Ponderado Log', N_Porosidade = 'Fator de Formacao',
+                          N_A1 = 'Amp1', N_A2 = 'Amp2', N_A3 = 'Amp3'):
+    # Regressão via OLS
+    dados_calculo_log = pd.DataFrame({
+    'Log k': np.log10(Dataframe_Parchekhari[N_Permeabilidade]),
+    'Log φ': np.log10(Dataframe_Parchekhari[N_Porosidade]),
+    'Log T2': np.log10(Dataframe_Parchekhari[N_T2]),
+    'A1': Dataframe_Parchekhari[N_A1],
+    'A2': Dataframe_Parchekhari[N_A2],
+    'A3': Dataframe_Parchekhari[N_A3]})
+
+    # Função para calcular a soma dos quadrados dos resíduos
+    def residuals(params, df):
+      ln_a, b, c, d, e, f = params
+      log_A1_A2_A3 = np.log(df['A1']**b + df['A2']**c + df['A3']**d)
+      predicted_ln_k = ln_a + log_A1_A2_A3 + e * df['Log T2'] + f * df['Log φ']
+      return np.sum((df['Log k'] - predicted_ln_k) ** 2)
+
+    # Valores iniciais para os parâmetros
+    initial_params = Params
+
+    # Minimização da função de resíduos
+    result = minimize(residuals, initial_params, args=(dados_calculo_log), method='BFGS')
+
+    # Extração dos parâmetros ajustados
+    ln_a, b, c, d, e, f = result.x
+    a = np.exp(ln_a)
+
+    # Cálculo de ln(P3^c + P4^d) com os coeficientes ajustados
+    dados_calculo_log['Log A1_A2_A3'] = np.log(dados_calculo_log['A1']**b + dados_calculo_log['A2']**c + dados_calculo_log['A3']**d)
+
+    # Definindo as variáveis independentes e a variável dependente
+    X = dados_calculo_log[['Log A1_A2_A3', 'Log T2', 'Log φ']]
+    dados_calculo = sm.add_constant(X)  # Adiciona uma constante (intercepto)
+    atributos = dados_calculo[['const', 'Log A1_A2_A3', 'Log T2', 'Log φ']]
+    rotulos = dados_calculo_log['Log k']
+
+    # Ajustando o modelo de regressão
+    reg_novo = sm.OLS(rotulos, atributos, hasconst=True, missing = 'drop').fit()
+
+    # Obtenção dos coeficientes da Regressão
+    coeficientes_novo = pd.DataFrame({
+                  'Coeficiente': ['a', 'b', 'c', 'd', 'e', 'f', 'R2'],
+                  'Valor': [np.exp(reg_novo.params[0]),
+                            b, c, d,
+                            reg_novo.params[1],
+                            reg_novo.params[2],
+                            reg_novo.rsquared]}).set_index('Coeficiente')
+
+    # Cálculo da Previsão com base nos coeficientes obtidos
+    ca = coeficientes_novo['Valor']['a']
+    cb = coeficientes_novo['Valor']['b']
+    cc = coeficientes_novo['Valor']['c']
+    cd = coeficientes_novo['Valor']['d']
+    ce = coeficientes_novo['Valor']['e']
+    cf = coeficientes_novo['Valor']['f']
+    phi = Dataframe_Parchekhari[N_Porosidade]
+    t2 = Dataframe_Parchekhari[N_T2]
+    A1Par = Dataframe_Parchekhari[N_A1]
+    A2Par = Dataframe_Parchekhari[N_A1]
+    A3Par = Dataframe_Parchekhari[N_A1]
+    k = ca*((A1Par**cb)+(A2Par**cc)+(A3Par**cd))*(t2**ce)*(phi**cf)
+    dados = pd.DataFrame({'Permeabilidade Prevista Parchekhari': k})
+
+
+    #Erro Sigma
+    k_p = np.log10(dados['Permeabilidade Prevista Parchekhari'])
+    k_g = np.log10(Dataframe_Parchekhari[N_Permeabilidade])
+    N = len(k_p)
+    soma = np.sum((k_p-k_g)**2)
+    raiz = np.sqrt(soma/N)
+    sigma = 10**(raiz)
+
+
+    return reg_novo, coeficientes_novo, pd.concat([Dataframe_Parchekhari, dados], axis = 1), sigma
+
+##################################################################################  Próxima Função  ##################################################################################
