@@ -1100,3 +1100,73 @@ def FatorQ (resultado_t, resultado_r):
   return resultado_r
 
 ##################################################################################  Próxima Função  ##################################################################################
+
+def AjusteComponentesT2Seevers(Dados, n=0, P0=(0.5, 0.5, 1, 1)):
+    """
+    Ajusta a função f(t) = A1 * exp(-t/3) + A2 * exp(-t/T2S)
+    para os dados de relaxação no índice n de um DataFrame.
+
+    Inclui normalização por A_t[0] e teste de qui-quadrado.
+
+    Parâmetros:
+        Dados: DataFrame com colunas 'Tempo Relaxacao', 'Amplitude Relaxacao', 'Amostra'
+        n: índice da amostra a ser ajustada
+        P0: chute inicial para [A1, A2, T2S]
+
+    Retorna:
+        coef: DataFrame com parâmetros ajustados, R² e resultado do teste qui-quadrado
+    """
+
+    # Extrai e normaliza os dados
+
+    time = np.array(Dados['Tempo Relaxacao'][n])
+    A_t = np.array(Dados['Picos Relaxacao Fitting'][n])
+    A_t = A_t / A_t[0]  # Normalização pelo valor inicial
+
+    # Define o modelo
+    def modelo(t, A1, A2, T2L, T2S):
+        return A1 * np.exp(-t/T2L) + A2 * np.exp(-t/T2S)
+
+    # Ajuste de parâmetros
+    params, _ = curve_fit(modelo, time, A_t, p0=P0, maxfev=10000)
+    A1_fit, A2_fit, T2L_fit, T2S_fit = params
+
+    # Valores previstos
+    A_pred = modelo(time, A1_fit, A2_fit, T2L_fit, T2S_fit)
+
+    # R²
+    r2 = r2_score(A_t, A_pred)
+
+    # Qui-quadrado
+    chi_square_statistic = np.sum((A_t - A_pred)**2 / A_pred)
+    degrees_of_freedom = len(A_t) - len(params)
+    critical_value = chi2.ppf(0.95, degrees_of_freedom)
+
+    if chi_square_statistic <= critical_value:
+        ajuste_aprovado = True
+        mensagem = "O ajuste do modelo é adequado."
+    else:
+        ajuste_aprovado = False
+        mensagem = "O ajuste do modelo não é adequado. Considere revisar os parâmetros iniciais."
+
+    print(mensagem)
+
+    # DataFrame de resultados
+    coef = pd.DataFrame({
+        'Amostra': [Dados['Amostra'][n]],
+        'A1': [A1_fit],
+        'A2': [A2_fit],
+        'T2S': [T2S_fit],
+        'T2L': [T2L_fit],
+        'R2': [r2],
+        'Qui2': [chi_square_statistic],
+        'Qui2_Critico': [critical_value],
+        'Ajuste_Adequado': [mensagem],
+        'Fração Bulk': [A1_fit * np.exp(-time/T2L_fit)],
+        'Fração Surface': [A2_fit * np.exp(-time/T2S_fit)],
+        'Aplitude ajustada': [A1_fit * np.exp(-time/T2L_fit) + A2_fit * np.exp(-time/T2S_fit)]
+    })
+
+    return coef
+
+##################################################################################  Próxima Função  ##################################################################################
