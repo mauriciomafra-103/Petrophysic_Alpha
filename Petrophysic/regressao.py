@@ -711,14 +711,22 @@ def RegressaoArns (Dados_Arns, N_Permeabilidade = 'Permeabilidade Gas', N_T2 = '
 def RegressaoParchekhari (Dataframe_Parchekhari, Params = [0, 0, 0, 0, 0, 0],
                           N_Permeabilidade = 'Permeabilidade Gas', N_T2 = 'T2 Ponderado Log', N_Porosidade = 'Fator de Formacao',
                           N_A1 = 'Amp1', N_A2 = 'Amp2', N_A3 = 'Amp3'):
+  
+    phi = Dataframe_Parchekhari[N_Porosidade]
+    T2 = Dataframe_Parchekhari[N_T2]
+    A1Par = Dataframe_Parchekhari[N_A1]
+    A2Par = Dataframe_Parchekhari[N_A1]
+    A3Par = Dataframe_Parchekhari[N_A1]
+    permeabilidade = Dataframe_Parchekhari[N_Permeabilidade]
+
     # Regressão via OLS
     dados_calculo_log = pd.DataFrame({
-    'Log k': np.log(Dataframe_Parchekhari[N_Permeabilidade]),
-    'Log φ': np.log(Dataframe_Parchekhari[N_Porosidade]),
-    'Log T2': np.log(Dataframe_Parchekhari[N_T2]),
-    'A1': Dataframe_Parchekhari[N_A1],
-    'A2': Dataframe_Parchekhari[N_A2],
-    'A3': Dataframe_Parchekhari[N_A3]})
+    'Log k': np.log(permeabilidade),
+    'Log φ': np.log(phi),
+    'Log T2': np.log(T2),
+    'A1': A1Par,
+    'A2': A2Par,
+    'A3': A3Par})
 
     # Função para calcular a soma dos quadrados dos resíduos
     def residuals(params, df):
@@ -753,7 +761,7 @@ def RegressaoParchekhari (Dataframe_Parchekhari, Params = [0, 0, 0, 0, 0, 0],
     coeficientes_novo = pd.DataFrame({
                   'Coeficiente': ['a', 'b', 'c', 'd', 'e', 'f', 'R2'],
                   'Valor': [np.exp(reg_novo.params[0]),
-                            b, c, d,
+                            np.exp(b), np.exp(c), np.exp(d),
                             reg_novo.params[1],
                             reg_novo.params[2],
                             reg_novo.rsquared]}).set_index('Coeficiente')
@@ -765,20 +773,15 @@ def RegressaoParchekhari (Dataframe_Parchekhari, Params = [0, 0, 0, 0, 0, 0],
     cd = coeficientes_novo['Valor']['d']
     ce = coeficientes_novo['Valor']['e']
     cf = coeficientes_novo['Valor']['f']
-    phi = Dataframe_Parchekhari[N_Porosidade]
-    t2 = Dataframe_Parchekhari[N_T2]
-    A1Par = Dataframe_Parchekhari[N_A1]
-    A2Par = Dataframe_Parchekhari[N_A1]
-    A3Par = Dataframe_Parchekhari[N_A1]
-    k = ca*((A1Par**cb)+(A2Par**cc)+(A3Par**cd))*(t2**ce)*(phi**cf)
+    k = ca*((A1Par**cb)+(A2Par**cc)+(A3Par**cd))*(T2**ce)*(phi**cf)
     dados = pd.DataFrame({'Permeabilidade Prevista Parchekhari': k})
 
 
     #Erro Sigma
     k_p = np.log10(dados['Permeabilidade Prevista Parchekhari'])
-    k_g = np.log10(Dataframe_Parchekhari[N_Permeabilidade])
+    k_g = np.log10(permeabilidade)
     N = len(k_p)
-    soma = np.sum((k_p-k_g)**2)
+    soma = np.sum((k_p - k_g) ** 2)
     raiz = np.sqrt(soma/N)
     sigma = 10**(raiz)
 
