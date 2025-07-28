@@ -786,3 +786,44 @@ def RegressaoParchekhari (Dataframe_Parchekhari, Params = [0, 0, 0, 0, 0, 0],
     return reg_novo, coeficientes_novo, pd.concat([Dataframe_Parchekhari, dados], axis = 1), sigma
 
 ##################################################################################  Próxima Função  ##################################################################################
+
+def RegressaoSeevers(Dados_Seevers, T2B = 3000, N_T2L = 'T2L', N_FFI = 'FFI', ):
+  permeabilidade = Dados_Seevers['Permeabilidade Gas']
+  T2L = Dados_Seevers[N_T2L]
+  FFI = Dados_Seevers[N_FFI]
+  Alfa = FFI * (df_Par['T2L'] * T2B / (T2B - df_Par['T2L'])) ** 2
+
+  dados_calculo = pd.DataFrame({'log Alfa': np.log(Alfa),
+                                'Log k': np.log(permeabilidade)})
+
+  dados_calculo = sm.add_constant(dados_calculo)
+  atributos = dados_calculo[['const', 'log Alfa']]
+  rotulos = dados_calculo[['Log k']]
+  reg_ols_log_Seevers = sm.OLS(rotulos, atributos, hasconst=True).fit()
+
+  coeficientes_Seevers = pd.DataFrame({
+        'Coeficiente': ['a', 'b', 'R2'],
+        'Valor': [np.exp(reg_ols_log_Seevers.params[0]),
+                  reg_ols_log_Seevers.params[1],
+                  reg_ols_log_Seevers.rsquared]}).set_index('Coeficiente')
+
+
+  #Cálculo da Previsão com base nos coeficientes obtidos
+  a = coeficientes_Seevers['Valor']['a']
+  b = coeficientes_Seevers['Valor']['b']
+  k = (a*(Alfa**b))
+  dados = pd.DataFrame({'Alfa': Alfa,
+                        'Permeabilidade Prevista Seevers': k})
+
+  #Erro Sigma
+  k_p = np.log10(dados['Permeabilidade Prevista Seevers'])
+  k_g = np.log10(permeabilidade)
+  N = len(k_p)
+  soma = np.sum((k_p-k_g)**2)
+  raiz = np.sqrt(soma/N)
+  sigma_Seevers = 10**(raiz)
+
+  return reg_ols_log_Seevers, coeficientes_Seevers, pd.concat([Dados_Seevers, dados['Alfa'],
+                                                               dados['Permeabilidade Prevista Seevers']], axis = 1), sigma_Seevers
+
+##################################################################################  Próxima Função  ##################################################################################
