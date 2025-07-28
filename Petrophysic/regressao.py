@@ -713,9 +713,9 @@ def RegressaoParchekhari (Dataframe_Parchekhari, Params = [0, 0, 0, 0, 0, 0],
                           N_A1 = 'Amp1', N_A2 = 'Amp2', N_A3 = 'Amp3'):
     # Regressão via OLS
     dados_calculo_log = pd.DataFrame({
-    'Log k': np.log10(Dataframe_Parchekhari[N_Permeabilidade]),
-    'Log φ': np.log10(Dataframe_Parchekhari[N_Porosidade]),
-    'Log T2': np.log10(Dataframe_Parchekhari[N_T2]),
+    'Log k': np.log(Dataframe_Parchekhari[N_Permeabilidade]),
+    'Log φ': np.log(Dataframe_Parchekhari[N_Porosidade]),
+    'Log T2': np.log(Dataframe_Parchekhari[N_T2]),
     'A1': Dataframe_Parchekhari[N_A1],
     'A2': Dataframe_Parchekhari[N_A2],
     'A3': Dataframe_Parchekhari[N_A3]})
@@ -787,11 +787,11 @@ def RegressaoParchekhari (Dataframe_Parchekhari, Params = [0, 0, 0, 0, 0, 0],
 
 ##################################################################################  Próxima Função  ##################################################################################
 
-def RegressaoSeevers(Dados_Seevers, T2B = 3000, N_T2L = 'T2L', N_FFI = 'FFI', ):
+def RegressaoSeevers(Dados_Seevers, T2B = 3000, N_T2L = 'T2L', N_FFI = 'FFI'):
   permeabilidade = Dados_Seevers['Permeabilidade Gas']
   T2L = Dados_Seevers[N_T2L]
   FFI = Dados_Seevers[N_FFI]
-  Alfa = FFI * (df_Par['T2L'] * T2B / (T2B - df_Par['T2L'])) ** 2
+  Alfa = FFI * (Dados_Seevers['T2L'] * T2B / (T2B - Dados_Seevers['T2L'])) ** 2
 
   dados_calculo = pd.DataFrame({'log Alfa': np.log(Alfa),
                                 'Log k': np.log(permeabilidade)})
