@@ -875,7 +875,7 @@ def RegressaoRiosTreino(Dados_Rios, N_permeabilidade = 'Permeabilidade Gas', Log
 
       y_pred_treino = plsr.predict(X_treino)
 
-      Dados_Rios['Permeabilidade Prevista Rios'] = (10**y_pred_treino)/1000
+      Dados_Rios['Permeabilidade Prevista Rios'] = np.abs((10**y_pred_treino)/1000)
 
     else:
       y_treino = Dados_Rios[N_permeabilidade]
@@ -885,7 +885,7 @@ def RegressaoRiosTreino(Dados_Rios, N_permeabilidade = 'Permeabilidade Gas', Log
 
       y_pred_treino = plsr.predict(X_treino)
 
-      Dados_Rios['Permeabilidade Prevista Rios'] = y_pred_treino
+      Dados_Rios['Permeabilidade Prevista Rios'] =  np.abs(y_pred_treino)
 
 
       #Erro Sigma
