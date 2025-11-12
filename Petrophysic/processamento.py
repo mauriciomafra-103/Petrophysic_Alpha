@@ -385,7 +385,7 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
     dados_lab['Amostra'] = dados_lab['Amostra'].astype(str)
     dados_lab = dados_lab.sort_values(by = 'Amostra').reset_index(drop = True)
 
-    tempo_distribuicao = dados_niumag[N_tempo]
+    tempo_distribuicao = np.array(dados_niumag[N_tempo])
     distribuicao_t2 = dados_niumag[N_distribuicao]
 
 
