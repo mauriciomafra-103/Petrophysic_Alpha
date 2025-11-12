@@ -198,6 +198,10 @@ def VisualizarDistribuicaoT2 (Dados, CBW = False, Anotacao = False, Salvar = Fal
             ax2.fill_between(x2, y2, where = (x1 >= V_arg) & (x1 < V_capilar), alpha = 0.3, color = 'yellow')
             ax2.text(300,y2[30]/2, 'FFI', fontsize = 12)
             ax2.fill_between(x2, y2, where = (x1 >= V_capilar) & (x1 <= 10000), alpha = 0.3, color = 'green')
+        if Salvar == True:
+            plt.savefig(f'/content/{amostra1}_{amostra2}.png', dpi = 1200)
+            plt.savefig(f'/content/{amostra1}_{amostra2}.pdf')
+        plt.show()
 
 #############################################################################################################
 
