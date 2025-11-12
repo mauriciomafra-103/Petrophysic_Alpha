@@ -411,6 +411,7 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
 
     df_niumag_sa = dados_niumag.drop('Amostra', axis = 1)
     df = pd.concat([dados_lab[Parametros_lab], df_niumag_sa], axis = 1)
+    print(df.info())
 
     if Litofacie == True:
       codi_lab = preprocessing.LabelEncoder()
