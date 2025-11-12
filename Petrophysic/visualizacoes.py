@@ -116,7 +116,7 @@ def HistogramaPermeabilidade(Dados, permeabilidade):
 
 #############################################################################################################
 
-def VisualizarDistribuicaoT2 (Dados, CBW = False, Anotacao = False, Salvar = False, N_porosidade = 'Porosidade_i',
+def VisualizarDistribuicaoT2 (Dados, CBW = False, Anotacao = False, Salvar = False, Diretorio = '/content/', N_porosidade = 'Porosidade_i',
                               N_distribuicao = 'Tempo Distribuicao', N_amostra = 'Amostra',
                               V_arg = 3.2, V_capilar = 92.0, Xticks_list = [0.3, 1, 3, 10, 92,  300, 1000, 5000],
                               Ylim = [0, 1], Xlim = [0.01, 10000], FigSize = (20,6)):
@@ -199,8 +199,8 @@ def VisualizarDistribuicaoT2 (Dados, CBW = False, Anotacao = False, Salvar = Fal
             ax2.text(300,y2[30]/2, 'FFI', fontsize = 12)
             ax2.fill_between(x2, y2, where = (x1 >= V_capilar) & (x1 <= 10000), alpha = 0.3, color = 'green')
         if Salvar == True:
-            plt.savefig(f'/content/{amostra1}_{amostra2}.png', dpi = 1200)
-            plt.savefig(f'/content/{amostra1}_{amostra2}.pdf')
+            plt.savefig(f'{Diretorio}{amostra1}_{amostra2}.png', dpi = 1200)
+            plt.savefig(f'{Diretorio}{amostra1}_{amostra2}.pdf')
         plt.show()
 
 #############################################################################################################
