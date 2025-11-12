@@ -586,7 +586,7 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
 
     if BVIFFI == True:
       for i in np.arange(len(porosi_i)):
-        indices_bviffi = np.where(tempo_distribuicao[i] <= T_BVIFFI)[0]
+        indices_bviffi = np.where(np.array(tempo_distribuicao[i]) <= T_BVIFFI)[0]
         f_bviffi = indices_bviffi[-1]
 
         phi_i = pd.Series(porosi_i[i])
@@ -610,8 +610,8 @@ def TratamentoDadosRMN(Diretorio_pasta, Arquivo_laboratorio, Dados_niumag, Nome_
     
     if Fracoes_arg_cap_ffi == True:
       for i in np.arange(len(porosi_i)):
-        indices_arg = np.where(tempo_distribuicao[i] <= T_arg)[0]
-        indices_cap = np.where(tempo_distribuicao[i] <= T_cap)[0]
+        indices_arg = np.where(np.array(tempo_distribuicao[i]) <= T_arg)[0]
+        indices_cap = np.where(np.array(tempo_distribuicao[i]) <= T_cap)[0]
         f_arg = indices_arg[-1]
         f_cap = indices_cap[-1]
 
